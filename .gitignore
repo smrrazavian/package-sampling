@@ -1,3 +1,4 @@
 .notebook
 .venv_*
 .venv
+__pycache__

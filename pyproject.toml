@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "package-smapling"
+version = "0.1.0"
+description = "Python version of Package Sampling in R"
+authors = [
+  { name = "Mohammadreza Razavian", email = "smrrazavian@outlook.com" }
+]
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.12"
