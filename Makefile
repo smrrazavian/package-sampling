@@ -78,6 +78,15 @@ pylint:
 .PHONY: precommit
 precommit: format isort lint typecheck test
 
+.PHONY: docs
+docs:
+	make -C doc html
+
+.PHONY: clean-docs
+clean-docs:
+	rm -rf doc/_build
+
+
 # Default target
 .DEFAULT_GOAL := help
 
@@ -98,3 +107,5 @@ help:
 	@echo "  make clean      - Clean cache and build artifacts"
 	@echo "  make pylint     - Run Pylint"
 	@echo "  make precommit  - Run all checks before committing"
+	@echo "  make docs       - Build documentation"
+	@echo "  make clean-docs - Clean documentation"

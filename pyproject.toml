@@ -12,3 +12,53 @@ authors = [
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.12"
+
+[tool.black]
+line-length = 88
+target-version = ['py39', 'py310', 'py311']
+skip-string-normalization = false
+include = '\.pyi?$'
+exclude = '''
+(
+    /(
+        \.git
+      | \.venv
+      | build
+      | dist
+      | __pycache__
+      | docs
+    )/
+)
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+combine_as_imports = true
+skip = ["venv", ".venv", "docs", "build", "dist"]
+
+[tool.flake8]
+max-line-length = 88
+ignore = [
+    "E203", # Whitespace before ':'
+    "W503", # Line break before binary operator
+]
+exclude = [
+    ".git",
+    "__pycache__",
+    "docs",
+    "venv",
+    ".venv",
+    "build",
+    "dist"
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+warn_return_any = true
+warn_unused_ignores = true
+warn_redundant_casts = true
