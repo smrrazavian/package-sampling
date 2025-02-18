@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from src.sampling.up_brewer import UPBrewer
+from package_sampling.sampling.up_brewer import UPBrewer
 
 
 @pytest.fixture

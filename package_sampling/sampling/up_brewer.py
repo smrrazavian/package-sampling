@@ -1,6 +1,6 @@
 import numpy as np
-from src.base import SamplingMethod
-from src.utils.as_int import as_int
+from package_sampling.base import SamplingMethod
+from package_sampling.utils.as_int import as_int
 
 
 class UPBrewer(SamplingMethod):
