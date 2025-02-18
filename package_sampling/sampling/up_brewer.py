@@ -4,7 +4,47 @@ from package_sampling.utils.as_int import as_int
 
 
 class UPBrewer(SamplingMethod):
+    """
+    Implements Brewer's method for Unequal Probability (UP) sampling.
+
+    This algorithm selects a fixed number of elements from a population
+    while maintaining the predefined inclusion probabilities.
+
+    Mathematics of the UPbrewer:
+    - Let pik be the inclusion probability of the i-th element.
+    - The algorithm selects a sample of size n from the population.
+    - For each element, the algorithm selects it with probability pik.
+    - If the selection vector `sb` contains more than n `1`s, it means that some elements were selected more than once.
+    - In this case, the algorithm reduces the probability of selecting the element by multiplying the inclusion probability by `1 - (1/n)`.
+    - The algorithm continues until the selection vector `sb` contains exactly n `1`s.
+    - The final selection vector `sb` contains the selected elements.
+
+    """
+
     def sample(self, pik: np.ndarray, eps: float = 1e-6) -> np.ndarray:
+        """
+        Selects a sample using Brewer's method for Unequal Probability sampling.
+
+        Args:
+            pik (np.ndarray): A 1D NumPy array representing inclusion probabilities of each element.
+                Values should be in the range (0,1).
+            eps (float, optional): A small threshold to handle floating-point precision issues. Defaults to 1e-6.
+
+        Returns:
+            np.ndarray: A 1D array of the same shape as `pik`, containing only 0s and 1s.
+            A `1` indicates that the corresponding element was selected in the sample.
+
+        Raises:
+            ValueError: If `pik` contains NaN values.
+            ValueError: If all elements of `pik` are outside the range (eps, 1 - eps).
+            ZeroDivisionError: If a division by zero occurs in the selection process.
+
+        Notes:
+            - This method ensures that the final selection matches the expected sample size.
+            - The function modifies a selection vector (`sb`) iteratively to ensure a valid sample.
+            - The probability update step uses a cumulative probability approach.
+        """
+
         if np.any(np.isnan(pik)):
             raise ValueError("Missing values detected in the pik vector.")
 
