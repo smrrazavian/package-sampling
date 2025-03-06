@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from package_sampling.sampling.upme_pik_from_q import UPMEpikfromq
+from package_sampling import UPMEpikfromq
 
 
 @pytest.fixture
