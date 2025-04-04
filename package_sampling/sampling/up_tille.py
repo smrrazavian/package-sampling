@@ -11,10 +11,11 @@ Mathematics of the UPTille:
 - The algorithm uses an iterative process to adjust the selection vector.
 """
 
-import numpy as np
 from typing import List, Union
-from package_sampling.utils import inclusion_probabilities
-from package_sampling.utils import as_int
+
+import numpy as np
+
+from package_sampling.utils import as_int, inclusion_probabilities
 
 
 def up_tille(pik: Union[List[float], np.ndarray], eps: float = 1e-6) -> np.ndarray:

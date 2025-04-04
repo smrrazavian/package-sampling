@@ -64,4 +64,10 @@ warn_unused_ignores = true
 warn_redundant_casts = true
 
 [tool.poetry.dependencies]
+
+[tool.poetry.group.dev.dependencies]
 pytest-cov = "^6.1.0"
+black = "^25.1.0"
+flake8 = "^7.2.0"
+isort = "^6.0.1"
+mypy = "^1.15.0"

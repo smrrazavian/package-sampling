@@ -16,6 +16,7 @@ Mathematics of the UPbrewer:
 """
 
 import numpy as np
+
 from package_sampling.utils import as_int
 
 

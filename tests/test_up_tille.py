@@ -1,7 +1,7 @@
-import pytest
 import numpy as np
-from package_sampling import up_tille
+import pytest
 
+from package_sampling import up_tille
 
 
 def test_valid_input():

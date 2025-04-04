@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from package_sampling import upme_s_from_q
 
 

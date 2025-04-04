@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from package_sampling import up_max_entropy
 
 
