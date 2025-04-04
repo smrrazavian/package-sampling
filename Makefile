@@ -1,5 +1,5 @@
 # Project configuration
-PACKAGE_NAME=src
+PACKAGE_NAME=package_sampling
 VENV=.venv
 PYTHON=$(VENV)/bin/python
 PIP=$(PYTHON) -m pip
@@ -32,7 +32,7 @@ test:
 # Run tests with coverage
 .PHONY: coverage
 coverage:
-	$(PYTEST) --cov=$(PACKAGE_NAME) tests/
+	$(PYTEST) --cov=$(PACKAGE_NAME) --cov-report=term --cov-report=html tests/
 
 # Lint with Flake8
 .PHONY: lint
