@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -13,6 +13,9 @@ authors = [
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.2.4",
+]
 
 [project.urls]
 Homepage = "https://github.com/smrrazavian/package-sampling"
@@ -94,6 +97,7 @@ disable = [
 ]
 
 [tool.poetry.dependencies]
+numpy = "^2.2.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest-cov = "^6"
@@ -102,3 +106,5 @@ flake8 = "^7"
 isort = "^6"
 mypy = "^1"
 pylint = "^3"
+build = "^1.2.2.post1"
+twine = "^6.1.0"
