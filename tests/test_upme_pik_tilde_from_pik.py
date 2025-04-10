@@ -1,6 +1,6 @@
 import numpy as np
 
-from package_sampling import upme_pik_tilde_from_pik
+from package_sampling.sampling import upme_pik_tilde_from_pik
 
 
 def test_upmepiktildefrompik_valid_numpy_array():

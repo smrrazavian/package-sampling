@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from package_sampling import upme_pik_from_q
+from package_sampling.sampling import upme_pik_from_q
 
 
 def test_upmepikfromq_valid_numpy_array():

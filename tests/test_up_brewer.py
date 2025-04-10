@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from package_sampling import up_brewer
+from package_sampling.sampling import up_brewer
 
 
 def test_up_brewer_basic():

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from package_sampling import up_max_entropy
+from package_sampling.sampling import up_max_entropy
 
 
 def test_upmaxentropy_valid_numpy_array():

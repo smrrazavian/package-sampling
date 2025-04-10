@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from package_sampling import upme_q_from_w
+from package_sampling.sampling import upme_q_from_w
 
 
 def test_upmeqfromw_valid_input():

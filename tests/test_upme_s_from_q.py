@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from package_sampling import upme_s_from_q
+from package_sampling.sampling import upme_s_from_q
 
 
 def test_upme_s_from_q_valid_input_shape():
