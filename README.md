@@ -12,7 +12,7 @@ pip install package-sampling
 
 ## Usage Example
 
-```bash
+```python
 from package_sampling import up_brewer
 
 # Create a population with inclusion probabilities
