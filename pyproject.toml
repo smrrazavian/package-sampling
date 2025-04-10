@@ -5,17 +5,22 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "package-smapling"
 version = "0.1.0"
-description = "Python version of Package Sampling in R"
+description = "Python implementation of various probability-based sampling algorithms inspired by the R package Sampling."
 authors = [
-  { name = "Mohammadreza Razavian", email = "smrrazavian@outlook.com" }
+  { name = "Mohammadreza Razavian", email = "smrrazavian@outlook.com" },
+  { name = "Bardia Panahbehagh", email = "Panahbehagh@khu.ac.ir"}
 ]
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.12"
 
+[project.urls]
+Homepage = "https://github.com/smrrazavian/package-sampling"
+Repository = "https://github.com/smrrazavian/package-sampling"
+
 [tool.black]
 line-length = 88
-target-version = ['py39', 'py310', 'py311']
+target-version = [ 'py311', "py312"]
 skip-string-normalization = false
 include = '\.pyi?$'
 exclude = '''
@@ -63,11 +68,37 @@ warn_return_any = true
 warn_unused_ignores = true
 warn_redundant_casts = true
 
+[tool.coverage.run]
+branch = true
+source = ["package_sampling"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:"
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--strict-markers --tb=short --cov=package_sampling --cov-report=term --cov-report=html"
+testpaths = ["tests"]
+
+[tool.pylint.'MAIN']
+max-line-length = 88
+disable = [
+    "C0114",  # missing-module-docstring
+    "C0116",  # missing-function-docstring
+    "C0103"   # variable name doesn't conform to snake_case
+]
+
 [tool.poetry.dependencies]
 
 [tool.poetry.group.dev.dependencies]
-pytest-cov = "^6.1.0"
-black = "^25.1.0"
-flake8 = "^7.2.0"
-isort = "^6.0.1"
-mypy = "^1.15.0"
+pytest-cov = "^6"
+black = "^25"
+flake8 = "^7"
+isort = "^6"
+mypy = "^1"
+pylint = "^3"

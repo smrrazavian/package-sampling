@@ -31,7 +31,7 @@ def as_int(x: float) -> int:
 
     if not np.isclose(rounded_x, x, atol=1e-6):
         warnings.warn(
-            f"The argument {x} is not exactly an integer. Using rounded value {rounded_x}.",
+            f"The argument {x} is not exactly an integer.Using rounded value {rounded_x}.",
             UserWarning,
         )
 

@@ -3,9 +3,10 @@ from typing import List, Union
 
 import numpy as np
 
+from package_sampling.utils import as_int
+
 from .upme_pik_from_q import upme_pik_from_q
 from .upme_q_from_w import upme_q_from_w
-from package_sampling.utils import as_int
 
 
 def upme_pik_tilde_from_pik(

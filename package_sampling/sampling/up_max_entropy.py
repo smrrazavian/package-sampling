@@ -1,3 +1,8 @@
+"""
+This module implements the maximum entropy sampling method (UPmaxentropy),
+used in unequal probability sampling schemes.
+"""
+
 import numpy as np
 
 from package_sampling.utils import as_int
