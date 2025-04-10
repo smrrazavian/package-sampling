@@ -13,10 +13,10 @@ pip install package-sampling
 ## Usage Example
 
 ```python
-from package_sampling import up_brewer
+from package_sampling.sampling import up_brewer
+import numpy as np
 
-# Create a population with inclusion probabilities
-probabilities = [0.1, 0.2, 0.3, 0.4]
+probabilities = np.array([0.1, 0.2, 0.3, 0.4])
 
 # Draw a sample using Brewer's method
 sample = up_brewer(probabilities)

@@ -4,4 +4,4 @@
 __pycache__
 .coverage
 dist/
-package_smapling.egg-info
+package_sampling.egg-info
