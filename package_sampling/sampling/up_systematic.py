@@ -1,3 +1,26 @@
+"""
+UPsystematic Sampling Method
+
+This module provides an implementation of the Unequal Probability (UP) systematic
+sampling method, commonly used in survey sampling when units have unequal
+inclusion probabilities.
+
+Function:
+    up_systematic(pik: np.ndarray, eps: float = 1e-6) -> np.ndarray:
+        Applies systematic sampling to a vector of inclusion probabilities and
+        returns a binary selection array.
+
+The implementation adheres to probabilistic principles for selecting a sample
+according to the specified inclusion probabilities. It is robust to edge cases
+such as missing values and handles deterministic inclusions when probabilities
+are close to 0 or 1.
+
+Example usage:
+    >>> pik = np.array([0.2, 0.3, 0.5])
+    >>> up_systematic(pik)
+    array([0, 0, 1])
+"""
+
 import numpy as np
 
 

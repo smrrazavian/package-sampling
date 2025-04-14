@@ -1,3 +1,32 @@
+"""
+UPME Adjusted Inclusion Probabilities (Tilde Version)
+
+This module implements an iterative method for adjusting inclusion probabilities
+in unequal probability sampling. The procedure is part of the Maximum Entropy
+sampling design (UPME), where adjusted inclusion probabilities are derived
+such that they are consistent with the maximum entropy criterion.
+
+Function:
+    upme_pik_tilde_from_pik(pik, eps=1e-6) -> np.ndarray:
+        Iteratively computes a modified version of the inclusion probabilities (`pik`)
+        to achieve balance in expected sample size and probabilistic consistency.
+
+This method ensures:
+- Probabilities remain within the [0, 1] interval.
+- Total inclusion expectation is preserved.
+- Convergence is controlled via a specified threshold (`eps`).
+
+Dependencies:
+- `upme_q_from_w`: Computes transition matrix `q` from importance weights.
+- `upme_pik_from_q`: Computes adjusted probabilities from matrix `q`.
+- `as_int`: Safely casts sums to integers while handling rounding checks.
+
+Typical usage example:
+    >>> pik = [0.2, 0.4, 0.6]
+    >>> upme_pik_tilde_from_pik(pik)
+    [0.19721907 0.35431553 0.6484654 ]
+"""
+
 import warnings
 from typing import List, Union
 
