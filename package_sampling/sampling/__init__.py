@@ -31,4 +31,4 @@ __all__ = [
     "upme_s_from_q",
 ]
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"

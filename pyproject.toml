@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "package-sampling"
-version = "0.2.0"
+version = "0.3.0"
 description = "Python implementation of various probability-based sampling algorithms inspired by the R package Sampling."
 authors = [
   { name = "Mohammadreza Razavian", email = "smrrazavian@outlook.com" },
@@ -14,7 +14,7 @@ readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.6"
 dependencies = [
-    "numpy>=2.2.4",
+    "numpy>=1.26",
 ]
 
 [project.urls]
@@ -97,7 +97,7 @@ disable = [
 ]
 
 [tool.poetry.dependencies]
-numpy = "^2.2.4"
+numpy = "^1.26"
 
 [tool.poetry.group.dev.dependencies]
 pytest-cov = "^6"
