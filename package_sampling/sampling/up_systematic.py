@@ -41,20 +41,16 @@ def up_systematic(pik: np.ndarray, eps: float = 1e-6) -> np.ndarray:
     if np.any(np.isnan(pik)):
         raise ValueError("There are missing values in the pik vector")
 
-    s = np.zeros_like(pik, dtype=int)
+    s = pik.copy()
+
     mask = (pik > eps) & (pik < 1 - eps)
     pik1 = pik[mask]
     N = len(pik1)
 
-    if N == 0:
-        s = (pik > 1 - eps).astype(int)
-        return s
-
-    u = np.random.uniform(0, 1)
-    a = (np.concatenate(([0], np.cumsum(pik1))) - u) % 1
-    s1 = (a[:N] > a[1:]).astype(int)
-
-    s[mask] = s1
-    s[pik >= 1 - eps] = 1
+    if N > 0:
+        u = np.random.uniform(0, 1)
+        a = (np.concatenate(([0], np.cumsum(pik1))) - u) % 1
+        s1 = (a[:N] > a[1:]).astype(int)
+        s[mask] = s1
 
     return s
