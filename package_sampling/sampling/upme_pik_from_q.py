@@ -26,14 +26,26 @@ def upme_pik_from_q(q: np.ndarray) -> np.ndarray:
     if not isinstance(q, np.ndarray) or q.ndim != 2:
         raise ValueError("Input q must be a 2D matrix (NumPy array or list).")
 
+    if np.all(q == 1.0):
+        return np.ones(q.shape[0])
+
     N, n = q.shape
     pro = np.zeros((N, n))
 
-    pro[0, -1] = 1
+    if n > 0:
+        pro[0, n - 1] = 1
 
-    pro[1:, 1:] += pro[:-1, 1:] * (1 - q[:-1, 1:])
-    pro[1:, :-1] += pro[:-1, 1:] * q[:-1, 1:]
+    for i in range(1, N):
+        for j in range(1, n):
+            pro[i, j] += pro[i - 1, j] * (1 - q[i - 1, j])
+            pro[i, j - 1] += pro[i - 1, j] * q[i - 1, j]
 
-    pro[1:, 0] += pro[:-1, 0] * (1 - q[:-1, 0])
+    for i in range(1, N):
+        pro[i, 0] += pro[i - 1, 0] * (1 - q[i - 1, 0])
 
-    return np.sum(pro * q, axis=1)
+    result = np.zeros(N)
+    for i in range(N):
+        for j in range(n):
+            result[i] += pro[i, j] * q[i, j]
+
+    return result
