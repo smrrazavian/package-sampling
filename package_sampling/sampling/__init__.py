@@ -13,6 +13,7 @@ Each algorithm returns a binary vector indicating selected units.
 
 from .up_brewer import up_brewer  # noqa: F401
 from .up_max_entropy import up_max_entropy  # noqa: F401
+from .up_poisson import up_poisson  # noqa: F401
 from .up_systematic import up_systematic  # noqa: F401
 from .up_tille import up_tille  # noqa: F401
 from .upme_pik_from_q import upme_pik_from_q  # noqa: F401
@@ -25,6 +26,7 @@ __all__ = [
     "up_max_entropy",
     "up_systematic",
     "up_tille",
+    "up_poisson",
     "upme_pik_from_q",
     "upme_pik_tilde_from_pik",
     "upme_q_from_w",
