@@ -1,0 +1,9 @@
+[run]
+source = package_sampling
+include =
+    */package_sampling/*.py
+    */package_sampling/sampling/*.py
+    */package_sampling/utils/*.py
+omit =
+    */tests/*
+    */__pycache__/*
