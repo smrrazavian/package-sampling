@@ -42,7 +42,7 @@ def inclusion_probabilities(a: Union[List[float], np.ndarray], n: int) -> np.nda
         warnings.warn(
             f"There are {n_neg} negative value(s) shifted to zero.", UserWarning
         )
-    a[a < 0] = 0
+        a[a < 0] = 0
 
     if np.all(a == 0):
         return np.zeros_like(a)
