@@ -23,7 +23,7 @@ Repository = "https://github.com/smrrazavian/package-sampling"
 
 [tool.black]
 line-length = 88
-target-version = [ 'py311', "py312"]
+target-version = ["py37", "py38", "py39", "py310", 'py311', "py312"]
 skip-string-normalization = false
 include = '\.pyi?$'
 exclude = '''
