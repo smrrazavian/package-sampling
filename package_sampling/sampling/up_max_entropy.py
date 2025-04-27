@@ -35,25 +35,30 @@ def up_max_entropy(pik: np.ndarray) -> np.ndarray:
     n = np.sum(pik)
     n = as_int(n)
 
-    if n >= 2:
-        pik2 = pik[pik != 1]
-        n = np.sum(pik2)
-        n = as_int(n)
+    s = np.zeros_like(pik, dtype=np.int64)
 
-        piktilde = upme_pik_tilde_from_pik(pik2)
-        w = piktilde / (1 - piktilde)
+    s[pik == 1] = 1
 
-        q = upme_q_from_w(w, n)
+    remaining_mask = pik < 1
+    remaining_pik = pik[remaining_mask]
+    remaining_n = n - np.sum(s)
+
+    if remaining_n >= 2 and len(remaining_pik) > 0:
+        piktilde = upme_pik_tilde_from_pik(remaining_pik)
+
+        with np.errstate(divide="ignore", invalid="ignore"):
+            w = np.where(piktilde < 1, piktilde / (1 - piktilde), np.inf)
+
+        q = upme_q_from_w(w, remaining_n)
+
         s2 = upme_s_from_q(q)
 
-        s = np.zeros_like(pik, dtype=int)
-        s[pik == 1] = 1
-        s[pik != 1][s2 == 1] = 1
+        s[remaining_mask] = s2
 
-    elif n == 0:
-        s = np.zeros_like(pik, dtype=int)
-
-    elif n == 1:
-        s = np.random.multinomial(1, pik)
+    elif remaining_n == 1 and len(remaining_pik) > 0:
+        norm_pik = remaining_pik / np.sum(remaining_pik)
+        rng = np.random.default_rng()
+        s_remaining = rng.multinomial(1, norm_pik)
+        s[remaining_mask] = s_remaining
 
     return s
