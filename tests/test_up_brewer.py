@@ -24,7 +24,7 @@ def test_up_brewer_valid_sample_size():
     pik = np.array([0.1, 0.2, 0.3, 0.4])
     selection = up_brewer(pik)
 
-    assert np.sum(selection) == round(np.sum(pik))
+    assert np.sum(selection) == np.round(np.sum(pik))
 
 
 def test_up_brewer_no_missing_values():
