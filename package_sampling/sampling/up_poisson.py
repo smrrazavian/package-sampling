@@ -8,7 +8,7 @@ def up_poisson(pik: Union[List[float], np.ndarray]) -> np.ndarray:
     Selects a sample using Poisson sampling with unequal probabilities.
 
     This sampling method selects each unit independently with probability pik.
-    Unlike Tillé sampling, the sample size is random (not fixed).
+    Here, the sample size is random (not fixed) with expected value of \sum_{k\in U}\pi_k.
 
     Args:
         pik (Union[List[float], np.ndarray]): A 1D list or NumPy array representing inclusion probabilities.
