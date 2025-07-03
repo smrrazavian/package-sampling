@@ -24,7 +24,11 @@ Example usage:
 import numpy as np
 
 
-def up_systematic(pik: np.ndarray, eps: float = 1e-6) -> np.ndarray:
+def up_systematic(
+    pik: np.ndarray,
+    eps: float = 1e-6,
+    rng: np.random.Generator | None = None,
+) -> np.ndarray:
     """
     Systematic sampling method (UPsystematic).
 
@@ -36,21 +40,23 @@ def up_systematic(pik: np.ndarray, eps: float = 1e-6) -> np.ndarray:
         np.ndarray: A binary selection array of 0s and 1s.
     """
     if not isinstance(pik, np.ndarray):
-        pik = np.array(pik, dtype=np.float64)
+        pik = np.array(pik, dtype=float)
 
     if np.any(np.isnan(pik)):
         raise ValueError("There are missing values in the pik vector")
 
-    s = pik.copy()
+    s = np.zeros_like(pik, dtype=np.int8)
+    s[pik >= 1 - eps] = 1
 
     mask = (pik > eps) & (pik < 1 - eps)
     pik1 = pik[mask]
     N = len(pik1)
 
     if N > 0:
-        u = np.random.uniform(0, 1)
+        rng = rng or np.random.default_rng()
+        u = rng.random()
         a = (np.concatenate(([0], np.cumsum(pik1))) - u) % 1
-        s1 = (a[:N] > a[1:]).astype(int)
+        s1 = (a[:N] > a[1:]).astype(np.int8)
         s[mask] = s1
 
     return s
