@@ -23,7 +23,7 @@ def mc_estimates(
         phat2 += np.outer(mask, mask)
     phat /= B
     phat2 /= B
-    np.fill_diagonal(phat2, phat)
+    np.fill_diagonal(phat2, phat)  # self-consistency
     return phat, phat2
 
 
@@ -40,10 +40,10 @@ def basic_design_checks(
     analytic_pi2=None,
 ) -> None:
     """
-    * design_fun : callable(pik, rng=Generator) -> 0/1 mask
-    * pik        : first-order inclusion probabilities
-    * fixed_n    : True  → assert realised n == round(sum(pik))
-    * analytic_pi2 : optional callable(pik) -> π₂ matrix (skip MC)
+    design_fun   : callable(pik, rng=Generator) → 0/1 mask
+    pik          : first-order inclusion probabilities
+    fixed_n      : True → assert realised n == round(sum(pik))
+    analytic_pi2 : callable(pik) → π₂ matrix (skip MC) or None
     """
     mask = design_fun(pik, rng=np.random.default_rng(42))
     assert mask.dtype == np.int8 and mask.shape == pik.shape
@@ -52,17 +52,28 @@ def basic_design_checks(
 
     # ---------- first-order ----------
     p1_hat, _ = mc_estimates(design_fun, pik, B=B)
-    sigma = np.sqrt(pik * (1 - pik) / B)
+    sigma1 = np.sqrt(pik * (1 - pik) / B)
     assert np.all(
-        np.abs(p1_hat - pik) <= z_threshold * sigma
+        np.abs(p1_hat - pik) <= z_threshold * sigma1
     ), "π̂ outside statistical tolerance"
 
     # ---------- second-order ----------
     if analytic_pi2 is not None:
         p2 = analytic_pi2(pik)
-    else:
-        _, p2 = mc_estimates(design_fun, pik, B=B)
+        # analytic result → diagonals must equal target π
+        np.testing.assert_allclose(np.diag(p2), pik, atol=1e-12)
 
-    np.testing.assert_allclose(np.diag(p2), pik, atol=1e-12)
-    lim = np.minimum.outer(pik, pik) + 1e-12
-    assert np.all(p2 <= lim), "π₂ violates upper bound"
+        # strict upper bound: π_ij ≤ min(π_i, π_j)
+        lim = np.minimum.outer(pik, pik) + 1e-12
+        assert np.all(p2 <= lim), "π₂ violates upper bound"
+    else:
+        # Monte-Carlo estimate
+        _, p2 = mc_estimates(design_fun, pik, B=B)
+        np.testing.assert_allclose(np.diag(p2), p1_hat, atol=1e-12)
+
+        # allow sampling error on upper-bound check
+        lim = np.minimum.outer(pik, pik)
+        sigma2 = np.sqrt(p2 * (1 - p2) / B)  # rough SE for each cell
+        assert np.all(
+            p2 <= lim + z_threshold * sigma2 + 1e-12
+        ), "π₂ exceeds upper bound beyond MC tolerance"
