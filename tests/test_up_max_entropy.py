@@ -158,7 +158,6 @@ def test_maxentropy_fixed_sample_size():
     """
     Test that maximum entropy sampling produces samples with the expected size.
     """
-    # Test with different probability vectors
     test_cases = [
         np.array([0.2, 0.3, 0.5]),  # Sum = 1
         np.array([0.3, 0.3, 0.3, 0.3]),  # Sum = 1.2
@@ -168,14 +167,12 @@ def test_maxentropy_fixed_sample_size():
     for pik in test_cases:
         expected_size = int(np.round(np.sum(pik)))
 
-        # Run multiple simulations
         sample_sizes = []
         for i in range(100):
             np.random.seed(i)
             result = up_max_entropy(pik)
             sample_sizes.append(np.sum(result))
 
-        # Debug prints for fixed sample size test
         unique_sizes = np.unique(sample_sizes)
         size_counts = {size: sample_sizes.count(size) for size in unique_sizes}
 
@@ -183,14 +180,13 @@ def test_maxentropy_fixed_sample_size():
         print(f"Expected sample size: {expected_size}")
         print(f"Observed sample sizes: {size_counts}")
 
-        # Check if all sample sizes are as expected
         assert np.all(
             np.array(sample_sizes) == expected_size
         ), f"Expected fixed sample size {expected_size}, but got sizes: {np.unique(sample_sizes)}"
 
 
 @pytest.mark.slow
-def test_maxentropy_joint_probabilities():
+def test_maxentropy_joint_probabilities():  # TODO: Fix this,this is not true
     """
     Test second-order inclusion probabilities (joint selection probabilities).
     """
@@ -202,23 +198,19 @@ def test_maxentropy_joint_probabilities():
         np.random.seed(i)
         results[i] = up_max_entropy(pik)
 
-    # First-order probabilities (marginal)
     first_order = np.mean(results, axis=0)
 
-    # Calculate joint selection probabilities
     joint_probs = np.zeros((len(pik), len(pik)))
     for i in range(len(pik)):
         for j in range(i + 1, len(pik)):
             joint_probs[i, j] = np.mean(
                 np.logical_and(results[:, i] == 1, results[:, j] == 1)
             )
-            joint_probs[j, i] = joint_probs[i, j]  # Symmetric matrix
+            joint_probs[j, i] = joint_probs[i, j]
 
-    # Set diagonal to first-order probabilities
     for i in range(len(pik)):
         joint_probs[i, i] = first_order[i]
 
-    # Debug prints
     print(f"Input probabilities: {pik}")
     print(f"First-order inclusion probabilities: {first_order}")
     print(f"Joint probabilities matrix:")
@@ -230,8 +222,6 @@ def test_maxentropy_joint_probabilities():
                 f"P({i},{j}): Joint={joint_probs[i,j]:.4f}, Product={first_order[i]*first_order[j]:.4f}, Diff={joint_probs[i,j]-first_order[i]*first_order[j]:.4f}"
             )
 
-    # Check maximum entropy property: joint probabilities should be close to
-    # product of marginals when possible (for sample size > 1)
     expected_size = int(np.round(np.sum(pik)))
 
     if expected_size > 1:
@@ -239,9 +229,6 @@ def test_maxentropy_joint_probabilities():
             for j in range(i + 1, len(pik)):
                 product_of_probs = first_order[i] * first_order[j]
 
-                # Maximum entropy tries to make joint probs close to product of marginals
-                # when consistent with fixed sample size
-                # We use a relatively large tolerance here due to the finite sample
                 assert (
                     np.abs(joint_probs[i, j] - product_of_probs) < 0.05
                 ), f"Joint probabilities don't reflect maximum entropy for units {i} and {j}"
