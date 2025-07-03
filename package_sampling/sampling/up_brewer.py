@@ -1,78 +1,109 @@
 """
-Implements Brewer's method for Unequal Probability (UP) sampling.
+Brewer unequal-probability sampling without replacement (fixed size).
 
-This algorithm selects a fixed number of elements from a population
-while maintaining the predefined inclusion probabilities.
-
-Mathematics of the UPbrewer:
-- Let pik be the inclusion probability of the i-th element.
-- The algorithm selects a sample of size n from the population.
-- For each element, the algorithm selects it with probability pik.
-- If the selection vector `sb` contains more than n `1`s, it means that some elements were selected more than once.
-- In this case, the algorithm reduces the probability of selecting the element by multiplying the inclusion probability by `1 - (1/n)`.
-- The algorithm continues until the selection vector `sb` contains exactly n `1`s.
-- The final selection vector `sb` contains the selected elements.
-
+Reference: Brewer & Hanif (1983), “Sampling with unequal probabilities”.
+Exact port of R’s `UPbrewer` from package *sampling* 2.10,
+but vectorised and exposing an `rng` parameter.
 """
 
+from __future__ import annotations
 import numpy as np
+from numpy.typing import NDArray
+from typing import List, Union
 
 from package_sampling.utils import as_int
 
 
-def up_brewer(pik: np.ndarray, eps: float = 1e-6) -> np.ndarray:
+def up_brewer(
+    pik: Union[List[float], NDArray[np.floating]],
+    eps: float = 1e-6,
+    rng: np.random.Generator | None = None,
+) -> NDArray[np.int8]:
     """
-    Selects a sample using Brewer's method for Unequal Probability sampling.
+    Brewer unequal-probability sampling (fixed-size, without replacement).
 
-    Args:
-        pik (np.ndarray): A 1D NumPy array representing inclusion probabilities of each element.
-            Values should be in the range (0,1).
-        eps (float, optional): A small threshold to handle floating-point precision issues. Defaults to 1e-6.
+    Implements the Brewer–Hanif algorithm (Brewer & Hanif 1983, §8.5) as in
+    *sampling* 2.10’s **UPbrewer**.  All “live” units
+    (``eps < πᵢ < 1−eps``) are treated in a sequential ‘take-one’ loop; units
+    with π≈0 or π≈1 are handled deterministically.
 
-    Returns:
-        np.ndarray: A 1D array of the same shape as `pik`, containing only 0s and 1s.
-        A `1` indicates that the corresponding element was selected in the sample.
+    Parameters
+    ----------
+    pik : 1-D array-like of float
+        First-order inclusion probabilities (0 ≤ πᵢ ≤ 1).
+    eps : float, default ``1e-6``
+        Threshold separating deterministic and live units:
+        * πᵢ ≤ *eps* → never selected,
+        * πᵢ ≥ 1−*eps* → always selected.
+    rng : numpy.random.Generator or None, default *None*
+        Random-number generator.  Falls back to ``np.random.default_rng()`` if
+        *None*.
 
-    Raises:
-        ValueError: If `pik` contains NaN values.
-        ValueError: If all elements of `pik` are outside the range (eps, 1 - eps).
-        ZeroDivisionError: If a division by zero occurs in the selection process.
+    Returns
+    -------
+    out : ndarray of int8
+        0/1 mask (length ``len(pik)``) indicating selected units.
+        The number of ones equals ``round(sum(pik_live))``.
 
-    Notes:
-        - This method ensures that the final selection matches the expected sample size.
-        - The function modifies a selection vector (`sb`) iteratively to ensure a valid sample.
-        - The probability update step uses a cumulative probability approach.
+    Raises
+    ------
+    ValueError
+        If *pik* contains NaNs, or if every πᵢ lies outside
+        ``(eps, 1−eps)``.
+
+    Notes
+    -----
+    **Algorithm.**
+
+    Let *n* = ``round(sum(pik_live))``.  At step *i* (1 ≤ *i* ≤ *n*) with
+    current selection vector ``sb``:
+
+    ``a     = (pik_live * sb).sum()``
+    ``denom = (n − a) − pik_live * (n − i + 1)``
+    ``probs = (1 − sb) * pik_live * ((n − a) − pik_live) / denom``
+
+    One unit is chosen with probability ∝ ``probs``; if
+    ``probs.sum() == 0`` (a numerical edge case when a single candidate
+    remains) we draw uniformly from the remaining indices.
+
+    The procedure maximises entropy subject to the fixed-size constraint and
+    the prescribed first-order probabilities.
+
+    References
+    ----------
+    Brewer, K. R. W., & Hanif, M. (1983). *Sampling with Unequal
+    Probabilities.* Springer-Verlag, New York.
     """
+    if not isinstance(pik, np.ndarray):
+        pik = np.asarray(pik, dtype=float)
 
     if np.any(np.isnan(pik)):
         raise ValueError("Missing values detected in the pik vector.")
 
-    eligible_mask = (pik > eps) & (pik < 1 - eps)
-    pikb = pik[eligible_mask]
+    live = (pik > eps) & (pik < 1 - eps)
+    pik_live = pik[live]
+    N = pik_live.size
+    if N == 0:
+        raise ValueError("All elements in pik are outside the range (eps,1-eps).")
 
-    if pikb.size == 0:
-        raise ValueError("All elements in pik are outside the range [eps, 1-eps].")
+    n = as_int(np.round(pik_live.sum()))
+    rng = rng or np.random.default_rng()
 
-    result = np.copy(pik)
-    sb = np.zeros_like(pikb, dtype=int)
-    total_pikb = as_int(np.sum(pikb))
-
-    for i in range(total_pikb):
-        a = np.dot(pikb, sb)
-        denom = (total_pikb - a) - pikb * (total_pikb - i + 1)
+    sb = np.zeros(N, dtype=np.int8)
+    for i in range(1, n + 1):
+        a = np.dot(pik_live, sb)
+        denom = (n - a) - pik_live * (n - i + 1)
 
         denom = np.where(np.abs(denom) < eps, eps, denom)
+        probs = (1 - sb) * pik_live * ((n - a) - pik_live) / denom
+        total = probs.sum()
+        if total == 0:
+            idx = rng.choice(np.flatnonzero(sb == 0))
+        else:
+            idx = np.searchsorted(np.cumsum(probs / total), rng.random())
+        sb[idx] = 1
 
-        p = (1 - sb) * pikb * ((total_pikb - a) - pikb) / denom
-        p_sum = np.sum(p)
-
-        if p_sum == 0:
-            continue
-
-        p /= p_sum
-        cumulative_p = np.cumsum(p)
-        j = np.searchsorted(cumulative_p, np.random.uniform())
-        sb[j] = 1
-
-    result[eligible_mask] = sb
-    return result
+    out = np.zeros_like(pik, dtype=np.int8)
+    out[pik >= 1 - eps] = 1
+    out[live] = sb
+    return out
