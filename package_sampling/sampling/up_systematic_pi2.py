@@ -10,8 +10,6 @@ import numpy as np
 from numpy.typing import NDArray
 from typing import List, Union
 
-from package_sampling.utils import as_int
-
 
 def up_systematic_pi2(
     pik: Union[List[float], NDArray[np.floating]],
@@ -33,7 +31,7 @@ def up_systematic_pi2(
     r = np.sort(Vk1)
     r = np.concatenate((r, [1.0]))
     cent = 0.5 * (r[:-1] + r[1:])
-    p = np.diff(r)  # segment lengths; sum == 1
+    p = np.diff(r)
 
     # ------- incidence matrix M ---------------------------------------
     # A_{ij} = ((0, cumsum(pik_live)) - cent_j) mod 1
@@ -44,7 +42,7 @@ def up_systematic_pi2(
     pi21 = M @ np.diag(p) @ M.T
 
     # ------- embed back into full N_pop × N_pop matrix -----------------
-    pi2 = np.outer(pik, pik)  # start with outer product
+    pi2 = np.outer(pik, pik)
     live_idx = np.where((pik > 0) & (pik < 1))[0]
     for i, ii in enumerate(live_idx):
         pi2[ii, live_idx] = pi21[i]
