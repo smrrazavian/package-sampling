@@ -43,6 +43,8 @@ def basic_design_checks(
     design_fun   : callable(pik, rng=Generator) → 0/1 mask
     pik          : first-order inclusion probabilities
     fixed_n      : True → assert realised n == round(sum(pik))
+    B            : number of Monte-Carlo replicates
+    z_threshold  : statistical tolerance for first-order π̂₁
     analytic_pi2 : callable(pik) → π₂ matrix (skip MC) or None
     """
     mask = design_fun(pik, rng=np.random.default_rng(42))
