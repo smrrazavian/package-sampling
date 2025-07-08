@@ -93,3 +93,27 @@ def test_upmepiktildefrompik_sum_equals_integer():
     pik = np.array([0.25, 0.25, 0.25, 0.25])  # Sum = 1
     result = upme_pik_tilde_from_pik(pik)
     assert np.isclose(np.sum(result), 1.0, atol=1e-5)
+
+
+# ------------------------------------------------------------------ #
+# revised large-vector test                                          #
+# ------------------------------------------------------------------ #
+def test_upmepiktildefrompik_large_vector():
+    """
+    Use a 100-length vector whose sum is an *integer* ≥ 1.
+    That is the setting the algorithm is designed for and it
+    converges in well under 1 000 iterations.
+    """
+    rng = np.random.default_rng(123)
+    pik = rng.uniform(size=100)
+    pik *= 12 / pik.sum()
+
+    # ensure nothing exceeds 1 after scaling
+    assert np.all(pik < 1.0)
+
+    result = upme_pik_tilde_from_pik(pik)
+
+    assert result.shape == pik.shape
+    assert np.all((0 <= result) & (result <= 1))
+    # sample size preserved
+    assert np.isclose(result.sum(), pik.sum(), atol=1e-6)

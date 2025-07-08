@@ -52,7 +52,7 @@ def upme_q_from_w(
     if not isinstance(w, np.ndarray):
         w = np.asarray(w, dtype=float)
     if w.ndim != 1:
-        raise ValueError("`w` must be 1‑D.")
+        raise ValueError("`w` must be 1-D")
     N: int = w.size
     if not (0 <= n <= N):
         raise ValueError("`n` out of range")
