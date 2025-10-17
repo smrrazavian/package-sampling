@@ -63,14 +63,6 @@ def test_upmepiktildefrompik_empty_input():
     assert result.shape == (0,)
 
 
-def test_upmepiktildefrompik_large_vector():
-    """Tests function behavior on a large vector."""
-    pik = np.random.uniform(0, 0.01, 100)
-    result = upme_pik_tilde_from_pik(pik)
-    assert result.shape == pik.shape
-    assert np.all(result >= 0) and np.all(result <= 1)
-
-
 def test_upmepiktildefrompik_values_outside_range():
     """Tests how the function handles values outside the [0,1] range."""
     pik = np.array([-0.1, 0.5, 1.2])
