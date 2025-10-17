@@ -7,9 +7,11 @@ but vectorised and exposing an `rng` parameter.
 """
 
 from __future__ import annotations
+
+from typing import List, Union
+
 import numpy as np
 from numpy.typing import NDArray
-from typing import List, Union
 
 from package_sampling.utils import as_int
 

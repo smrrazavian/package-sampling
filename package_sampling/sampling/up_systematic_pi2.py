@@ -6,9 +6,11 @@ Complexity: O(N²) memory, but only a few dense matrix ops.
 """
 
 from __future__ import annotations
+
+from typing import List, Union
+
 import numpy as np
 from numpy.typing import NDArray
-from typing import List, Union
 
 
 def up_systematic_pi2(

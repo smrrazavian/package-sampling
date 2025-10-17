@@ -13,13 +13,16 @@ The fixed-point iteration stops when
 """
 
 from __future__ import annotations
-import numpy as np
-from numpy.typing import NDArray
+
 from typing import List, Union
 
+import numpy as np
+from numpy.typing import NDArray
+
 from package_sampling.utils import as_int
-from .upme_q_from_w import upme_q_from_w
+
 from .upme_pik_from_q import upme_pik_from_q
+from .upme_q_from_w import upme_q_from_w
 
 
 def upme_pik_tilde_from_pik(

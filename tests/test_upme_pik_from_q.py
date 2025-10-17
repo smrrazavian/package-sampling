@@ -69,4 +69,3 @@ def test_upmepikfromq_large_matrix():
     res = upme_pik_from_q(q)
     assert res.shape == (q.shape[0],)
     assert np.all((0 <= res) & (res <= 1))
-

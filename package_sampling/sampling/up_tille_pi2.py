@@ -8,11 +8,13 @@ For large N this is O(N²) memory; use sparsity tricks if needed.
 """
 
 from __future__ import annotations
-import numpy as np
-from numpy.typing import NDArray
+
 from typing import List, Union
 
-from package_sampling.utils import inclusion_probabilities, as_int
+import numpy as np
+from numpy.typing import NDArray
+
+from package_sampling.utils import as_int, inclusion_probabilities
 
 
 def up_tille_pi2(

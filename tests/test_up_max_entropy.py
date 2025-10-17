@@ -1,12 +1,10 @@
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
-from package_sampling.sampling import up_max_entropy
-from package_sampling.sampling import up_max_entropy_pi2
-
+from package_sampling.sampling import up_max_entropy, up_max_entropy_pi2
 from tests.shared_checks import basic_design_checks
-
 
 # ─────────────────────────────────────────────────────────────
 # 1. Core probability sanity

@@ -24,13 +24,16 @@ Key points
 """
 
 from __future__ import annotations
-import numpy as np
-from numpy.typing import NDArray
+
 from typing import List, Union
 
+import numpy as np
+from numpy.typing import NDArray
+
 from package_sampling.utils import as_int
-from .upme_pik_tilde_from_pik import upme_pik_tilde_from_pik
+
 from .upme_pik2_from_pik_w import upme_pik2_from_pik_w
+from .upme_pik_tilde_from_pik import upme_pik_tilde_from_pik
 
 
 def up_max_entropy_pi2(

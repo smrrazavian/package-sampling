@@ -19,9 +19,10 @@ Differences to the previous buggy port
 * guard all divisions so that 0/0 → 0 (faithful to the original R code).
 """
 
+from typing import List, Union
+
 import numpy as np
 from numpy.typing import NDArray
-from typing import List, Union
 
 
 def upme_q_from_w(
