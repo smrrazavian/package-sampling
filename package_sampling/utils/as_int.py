@@ -24,14 +24,16 @@ def as_int(x: float) -> int:
 
     if x < int_min or x > int_max:
         raise ValueError(
-            f"The input {x} exceeds the allowable integer range [{int_min}, {int_max}]."
+            f"The input {x} exceeds the allowable integer range "
+            f"[{int_min}, {int_max}]."
         )
 
     rounded_x = round(x)
 
     if not np.isclose(rounded_x, x, atol=1e-6):
         warnings.warn(
-            f"The argument {x} is not exactly an integer.Using rounded value {rounded_x}.",
+            f"The argument {x} is not exactly an integer. "
+            f"Using rounded value {rounded_x}.",
             UserWarning,
         )
 

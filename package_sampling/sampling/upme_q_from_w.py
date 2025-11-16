@@ -2,20 +2,19 @@ from __future__ import annotations
 
 """package_sampling.sampling.upme_q_from_w
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Vectorised re‑implementation of the R helper **`UPMEqfromw`** that turns the
-vector of *conditional odds* ``w`` into the sequential Max–Entropy
-*q‑matrix* used by `up_max_entropy`.
+Vectorised re-implementation of the R helper **`UPMEqfromw`** that turns the
+vector of *conditional odds* ``w`` into the sequential Max-Entropy
+*q-matrix* used by ``up_max_entropy``.
 
-The algorithm is algebraically identical to the triple‑loop reference but is
-written with NumPy primitives so that the overall complexity stays
-:math:`O(Nn)` yet the constant factor is ~20× smaller.
+The algorithm matches the triple-loop reference but is implemented with NumPy
+primitives so the complexity remains :math:`O(Nn)` yet the constant factor is
+~20× smaller.
 
 Differences to the previous buggy port
 --------------------------------------
 * work **directly** with the conditional odds ``w`` – the earlier variant
   divided by ``1+w`` and therefore broke the recurrences;
-* fix the diagonal "tail" of the cumulative table ``expa``
-  (rows *N‑n … N‑1* inclusive);
+* fix the diagonal "tail" of the cumulative table ``expa`` (rows *N-n … N-1*);
 * guard all divisions so that 0/0 → 0 (faithful to the original R code).
 """
 
@@ -65,7 +64,9 @@ def upme_q_from_w(
         return np.zeros((N, n))
     if n == 1:
         denom = np.flip(np.cumsum(np.flip(w)))
-        return np.divide(w, denom, out=np.zeros_like(w), where=denom > 0).reshape(N, 1)
+        numer = np.zeros_like(w)
+        ratios = np.divide(w, denom, out=numer, where=denom > 0)
+        return ratios.reshape(N, 1)
 
     # ------------------------------------------------------------------ #
     # 2. build the cumulative "expa" table  Z(i,z)                       #
@@ -91,7 +92,12 @@ def upme_q_from_w(
     # ------------------------------------------------------------------ #
     q = np.zeros_like(expa)
 
-    q[:, 0] = np.divide(w, expa[:, 0], out=np.zeros_like(w), where=expa[:, 0] > 0)
+    q[:, 0] = np.divide(
+        w,
+        expa[:, 0],
+        out=np.zeros_like(w),
+        where=expa[:, 0] > 0,
+    )
 
     for i in range(N - n, N):
         q[i, N - i - 1] = 1.0

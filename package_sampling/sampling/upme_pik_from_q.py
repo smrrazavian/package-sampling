@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-from typing import List, Union
+from typing import Any, List, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray
 
+FloatArray = NDArray[np.floating[Any]]
+
 
 def upme_pik_from_q(
-    q: Union[List[List[float]], NDArray[np.floating]],
+    q: Union[List[List[float]], FloatArray],
     /,
-) -> NDArray[np.floating]:
+) -> FloatArray:
     """
     Convert *q* matrix to *π̃* vector (R `UPMEpikfromq`).
 
@@ -28,19 +30,20 @@ def upme_pik_from_q(
     if q.ndim != 2:
         raise ValueError("`q` must be 2-D.")
 
+    q = cast(FloatArray, q)
     N, n = q.shape
     if n == 0:
-        return np.zeros(N)
+        return cast(FloatArray, np.zeros(N, dtype=float))
 
     if np.all(q == 0):
-        return np.zeros(N)
+        return cast(FloatArray, np.zeros(N, dtype=float))
     if np.all(q == 1):
-        return np.ones(N)
+        return cast(FloatArray, np.ones(N, dtype=float))
 
     # ------------------------------------------------------------------
     # Forward–backward dynamic programme as in R but vectorised
     # ------------------------------------------------------------------
-    pro = np.zeros((N, n))
+    pro = np.zeros((N, n), dtype=float)
     pro[0, n - 1] = 1.0
 
     for i in range(1, N):
@@ -51,4 +54,5 @@ def upme_pik_from_q(
 
         pro[i, 0] += pro[i - 1, 0] * (1.0 - q[i - 1, 0])
 
-    return (pro * q).sum(axis=1)
+    result = np.sum(pro * q, axis=1)
+    return cast(FloatArray, result)

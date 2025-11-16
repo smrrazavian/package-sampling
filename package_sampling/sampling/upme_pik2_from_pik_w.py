@@ -6,21 +6,25 @@ from numpy.typing import NDArray
 from package_sampling.utils import as_int
 
 
-def upme_pik2_from_pik_w(pik: NDArray, w: NDArray, eps: float = 1e-12) -> NDArray:
+def upme_pik2_from_pik_w(
+    pik: NDArray,
+    w: NDArray,
+    eps: float = 1e-12,
+) -> NDArray:
     """
-    UPME joint-inclusion block  π₂  ⇐  (π , w)
+    UPME joint-inclusion block π₂ from (π, w).
 
-    Vectorised 1-for-1 translation of R’s  `UPMEpik2frompikw()`.
+    Vectorised 1-for-1 translation of R’s  ``UPMEpik2frompikw()``.
 
     Parameters
     ----------
     pik : 1-D ndarray of live first-order π  (0 < π < 1)
-    w   : 1-D ndarray with  w = π / (1 − π)  same length as `pik`
+    w   : 1-D ndarray with  w = π / (1 − π)  same length as ``pik``
 
     Returns
     -------
-    square ndarray (N×N) containing the joint probabilities for the live units.
-    Diagonal equals π.
+    square ndarray (N×N) containing the joint probabilities for the live
+    units. Diagonal equals π.
     """
     pik = np.asarray(pik, dtype=float)
     w = np.asarray(w, dtype=float)
@@ -31,7 +35,7 @@ def upme_pik2_from_pik_w(pik: NDArray, w: NDArray, eps: float = 1e-12) -> NDArra
     n = as_int(round(pik.sum()))
     M = np.empty((N, N), dtype=float)
 
-    # --- first pass: formula wherever π_k ≠ π_l ---------------------------
+    # --- first pass: formula wherever π_k ≠ π_l --------------------
     diff = pik[:, None] != pik[None, :]
     denom = w[None, :] - w[:, None]
 

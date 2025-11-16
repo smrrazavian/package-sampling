@@ -86,7 +86,9 @@ def up_brewer(
     pik_live = pik[live]
     N = pik_live.size
     if N == 0:
-        raise ValueError("All elements in pik are outside the range (eps,1-eps).")
+        raise ValueError(
+            "All elements in pik are outside the open interval (eps, 1 - eps)."
+        )
 
     n = as_int(np.round(pik_live.sum()))
     rng = rng or np.random.default_rng()

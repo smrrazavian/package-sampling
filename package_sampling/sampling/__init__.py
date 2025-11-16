@@ -6,7 +6,8 @@ This module exposes various probability-based sampling methods including:
 - Tillé’s method
 - Max Entropy sampling
 - Brewer’s method
-- Pivotal methods and intermediate transformations (e.g., q-from-w, pik-tilde-from-pik)
+- Pivotal methods and intermediate transformations (e.g., q-from-w,
+  pik-tilde-from-pik)
 
 Each algorithm returns a binary vector indicating selected units.
 """

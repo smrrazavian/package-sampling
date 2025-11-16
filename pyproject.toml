@@ -1,66 +1,69 @@
-[build-system]
-requires = ["setuptools>=77.0.3"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "package-sampling"
 version = "0.3.0"
-description = "Python implementation of various probability-based sampling algorithms inspired by the R package Sampling."
+description = "Python implementation of probability-based sampling algorithms inspired by the R package Sampling."
 authors = [
-  { name = "Mohammadreza Razavian", email = "smrrazavian@outlook.com" },
-  { name = "Bardia Panahbehagh", email = "Panahbehagh@khu.ac.ir"}
+  "Mohammadreza Razavian <smrrazavian@outlook.com>",
+  "Bardia Panahbehagh <Panahbehagh@khu.ac.ir>"
 ]
 readme = "README.md"
-license = { file = "LICENSE" }
-requires-python = ">=3.6"
-dependencies = [
-    "numpy>=1.26",
+license = "MIT"
+homepage = "https://github.com/smrrazavian/package-sampling"
+repository = "https://github.com/smrrazavian/package-sampling"
+
+# Explicitly include your package directory
+packages = [
+  { include = "package_sampling" }
 ]
 
-[project.urls]
-Homepage = "https://github.com/smrrazavian/package-sampling"
-Repository = "https://github.com/smrrazavian/package-sampling"
+[tool.poetry.dependencies]
+python = ">=3.8"
+numpy = "^1.26"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8"
+pytest-cov = "^6"
+black = "^25"
+flake8 = "^7"
+isort = "^6"
+mypy = "^1"
+pylint = "^3"
+coverage = "^7"
+build = "^1.2"
+twine = "^6.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# ==========================
+# Formatting & Linting Tools
+# ==========================
 
 [tool.black]
-line-length = 88
-target-version = ["py37", "py38", "py39", "py310", 'py311', "py312"]
-skip-string-normalization = false
-include = '\.pyi?$'
-exclude = '''
-(
-    /(
-        \.git
-      | \.venv
-      | build
-      | dist
-      | __pycache__
-      | docs
-    )/
-)
-'''
+line-length = 79
+target-version = ["py38", "py39", "py310", "py311", "py312"]
 
 [tool.isort]
 profile = "black"
-line_length = 88
+line_length = 79
 multi_line_output = 3
 include_trailing_comma = true
-combine_as_imports = true
-skip = ["venv", ".venv", "docs", "build", "dist"]
 
 [tool.flake8]
 max-line-length = 88
 ignore = [
-    "E203", # Whitespace before ':'
-    "W503", # Line break before binary operator
+    "E203",  # Whitespace before ':'
+    "W503"   # line break before binary operator
 ]
 exclude = [
     ".git",
     "__pycache__",
-    "docs",
-    "venv",
-    ".venv",
+    "htmlcov",
     "build",
-    "dist"
+    "dist",
+    "venv",
+    ".venv"
 ]
 
 [tool.mypy]
@@ -71,6 +74,10 @@ warn_return_any = true
 warn_unused_ignores = true
 warn_redundant_casts = true
 
+# ==========================
+# Coverage
+# ==========================
+
 [tool.coverage.run]
 branch = true
 source = ["package_sampling"]
@@ -78,33 +85,12 @@ source = ["package_sampling"]
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
-exclude_lines = [
-    "pragma: no cover",
-    "if __name__ == .__main__.:"
-]
+
+# ==========================
+# Pytest Configuration
+# ==========================
 
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "--strict-markers --tb=short --cov=package_sampling --cov-report=term --cov-report=html"
 testpaths = ["tests"]
-
-[tool.pylint.'MAIN']
-max-line-length = 88
-disable = [
-    "C0114",  # missing-module-docstring
-    "C0116",  # missing-function-docstring
-    "C0103"   # variable name doesn't conform to snake_case
-]
-
-[tool.poetry.dependencies]
-numpy = "^1.26"
-
-[tool.poetry.group.dev.dependencies]
-pytest-cov = "^6"
-black = "^25"
-flake8 = "^7"
-isort = "^6"
-mypy = "^1"
-pylint = "^3"
-build = "^1.2.2.post1"
-twine = "^6.1.0"

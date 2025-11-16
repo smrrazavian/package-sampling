@@ -14,7 +14,7 @@ The fixed-point iteration stops when
 
 from __future__ import annotations
 
-from typing import List, Union
+from typing import Any, List, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -51,8 +51,7 @@ def upme_pik_tilde_from_pik(
         If the algorithm fails to converge within `max_iter`.
     """
     # ---------- validation -------------------------------------------------
-    if not isinstance(pik, np.ndarray):
-        pik = np.asarray(pik, dtype=float)
+    pik = cast(NDArray[np.floating[Any]], np.asarray(pik, dtype=float))
     if pik.ndim != 1:
         raise ValueError("`pik` must be 1-D.")
     if pik.size == 0 or np.all(pik == 0):

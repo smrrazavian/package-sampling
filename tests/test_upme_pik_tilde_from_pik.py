@@ -4,7 +4,7 @@ from package_sampling.sampling import upme_pik_tilde_from_pik
 
 
 def test_upmepiktildefrompik_valid_numpy_array():
-    """Tests whether the function correctly computes adjusted inclusion probabilities for a NumPy array."""
+    """Validate adjusted inclusion probabilities for a NumPy array."""
     pik = np.array([0.1, 0.2, 0.3, 0.4])
     result = upme_pik_tilde_from_pik(pik)
     assert result.shape == pik.shape
@@ -46,7 +46,9 @@ def test_upmepiktildefrompik_edge_case_sum_equals_zero():
     """Tests how the function handles a vector whose sum is zero."""
     pik = np.array([0.0, 0.0, 0.0, 0.0])
     result = upme_pik_tilde_from_pik(pik)
-    assert np.all(result == 0), "The result should be all zeros when the sum is zero."
+    assert np.all(
+        result == 0
+    ), "The result should be all zeros when the sum is zero."
 
 
 def test_upmepiktildefrompik_edge_case_ones():
@@ -66,8 +68,8 @@ def test_upmepiktildefrompik_empty_input():
 def test_upmepiktildefrompik_values_outside_range():
     """Tests how the function handles values outside the [0,1] range."""
     pik = np.array([-0.1, 0.5, 1.2])
-    # Check that it doesn't crash, but we don't validate specific output since the behavior
-    # for out-of-range values might need to be defined by your implementation
+    # Ensure it does not crash; the behaviour for out-of-range values is
+    # implementation-specific so we only check shape.
     result = upme_pik_tilde_from_pik(pik)
     assert result.shape == pik.shape
 

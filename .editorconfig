@@ -11,6 +11,7 @@ insert_final_newline = true
 indent_style = space
 indent_size = 4
 trim_trailing_whitespace = true
+max_line_length = 79
 
 # Markdown, YAML, JSON, and TOML use 2-space indentation
 [*.{md,yml,yaml,json,toml}]

@@ -55,7 +55,7 @@ def test_extreme_values():
 
 # Statistical property tests
 def test_poisson_expected_sample_size():
-    """Test that Poisson sampling has expected sample size close to sum of probabilities."""
+    """Mean sample size stays close to the probability sum."""
     pik = np.array([0.2, 0.3, 0.5])
     expected_size = np.sum(pik)
 
@@ -87,16 +87,18 @@ def test_poisson_inclusion_probabilities():
     actual_probs = results.mean(axis=0)
     std_error = np.sqrt(pik * (1 - pik) / num_simulations)
 
-    # Check if actual probabilities are within 3 standard errors of theoretical
+    # Check if actual probabilities are within three standard errors of
+    # the theoretical values.
     within_bounds = np.abs(actual_probs - pik) <= 3 * std_error
 
     print(f"Expected probabilities: {pik}")
     print(f"Actual probabilities: {actual_probs}")
     print(f"Std Error: {std_error}")
 
-    assert np.all(
-        within_bounds
-    ), f"Inclusion probabilities don't match expected: {list(zip(pik, actual_probs))}"
+    assert np.all(within_bounds), (
+        "Inclusion probabilities don't match expected: "
+        f"{list(zip(pik, actual_probs))}"
+    )
 
 
 def test_poisson_independence():
@@ -121,7 +123,8 @@ def test_poisson_independence():
     # Calculate marginal selection probabilities
     marginal_probs = results.mean(axis=0)
 
-    # For independence, joint probability should approximately equal product of marginals
+    # Independence implies the joint probability matches the product of
+    # the marginal probabilities.
     for i in range(len(pik)):
         for j in range(i + 1, len(pik)):
             expected_joint = marginal_probs[i] * marginal_probs[j]
@@ -134,7 +137,8 @@ def test_poisson_independence():
             # Check if within 3 standard errors
             assert np.abs(actual_joint - expected_joint) <= 3 * se_joint, (
                 f"Units {i} and {j} selections are not independent. "
-                f"Expected joint prob: {expected_joint}, actual: {actual_joint}"
+                f"Expected joint prob: {expected_joint}, "
+                f"actual: {actual_joint}"
             )
 
 
@@ -171,7 +175,7 @@ def test_poisson_variance():
     ],
 )
 def test_poisson_with_various_distributions(pik):
-    """Test Poisson sampling with different probability distributions."""
+    """Exercise Poisson sampling with different probability vectors."""
     expected_size = np.sum(pik)
     num_simulations = 1000
 
@@ -215,7 +219,8 @@ def test_intensive_poisson_properties():
     for i in range(len(pik)):
         for j in range(len(pik)):
             if i == j:
-                joint_probs[i, j] = actual_probs[i]  # Probability of selecting unit i
+                # Probability of selecting unit i
+                joint_probs[i, j] = actual_probs[i]
             else:
                 joint_probs[i, j] = np.mean(
                     np.logical_and(results[:, i] == 1, results[:, j] == 1)
