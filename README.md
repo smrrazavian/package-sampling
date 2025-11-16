@@ -1,27 +1,54 @@
 # Package Sampling
 
-A Python implementation of various probability-based sampling algorithms, inspired by the R package [sampling](https://cran.r-project.org/web/packages/sampling/index.html). This package offers a variety of sampling methods like `Tillé's Method`, `Poisson Sampling`, `Systematic Sampling`, and more, designed for **unequal probability** sampling. The algorithms are implemented in a way that supports both theoretical understanding and real-world use cases.
+Python implementations of unequal-probability sampling algorithms inspired by
+the R package [sampling](https://cran.r-project.org/web/packages/sampling/index.html).
+The library focuses on survey-sampling designs where each unit can have its own
+inclusion probability.  Implementations favour clarity, deterministic edge-case
+handling, and full property tests so they can be used both in teaching and in
+production pipelines.
+
+## Features
+
+- Brewer, Tillé, Systematic, Poisson, and Max-Entropy samplers, plus helper
+  transforms (`q-from-w`, `π̃-from-π`, joint π₂ blocks, etc.).
+- Deterministic handling of units with π≈0 or π≈1 and reproducible RNG support.
+- 100% coverage tests for the Poisson/Systematic routines and statistical
+  checks for the remaining methods.
+- Typed NumPy APIs and lightweight `numpy` dependency only.
 
 ## Installation
 
-You can install the package directly from PyPI:
+Install from PyPI:
 
 ```bash
 pip install package-sampling
 ```
 
-## Usage Example
+## Usage
 
 ```python
-from package_sampling.sampling import up_brewer
 import numpy as np
+from package_sampling.sampling import (
+    up_brewer,
+    up_poisson,
+    up_systematic,
+)
 
 pik = np.array([0.1, 0.2, 0.3, 0.4])
 
-# Draw a sample using Brewer's method
-samples = up_brewer(pik)
-print(samples)
+# Draw a fixed-size sample using Brewer’s method
+brewer_sample = up_brewer(pik)
+
+# Draw a Poisson sample (random size)
+poisson_sample = up_poisson(pik)
+
+# Deterministic handling of π≈0 or π≈1, RNG optional
+systematic_sample = up_systematic(pik, rng=np.random.default_rng(123))
 ```
+
+The `package_sampling.sampling` module exposes every design via `__all__`, so
+you can also `from package_sampling import sampling as samp` and work with
+`samp.up_tille`, `samp.upme_q_from_w`, etc.
 
 ## Authors
 
@@ -47,15 +74,26 @@ If you use this package in your work, please cite it as follows:
 }
 ```
 
-## Acknowledgments
-
-This package is inspired by the R package "Sampling"
-Thanks to all contributors and users
-
 ## Contributing
 
-We welcome contributions to the package! If you have suggestions for new algorithms, improvements, or bug fixes, feel free to fork the repository and submit a pull request. Please ensure that your code adheres to the existing style and includes tests for any new functionality.
-Steps to Contribute:
+We welcome contributions!  Please ensure any change preserves the statistical
+properties of the designs and includes regression tests.
+
+**Development workflow**
+
+```bash
+git clone https://github.com/smrrazavian/package-sampling.git
+cd package-sampling
+poetry install
+poetry run pytest   # or `make precommit`
+```
+
+Before opening a PR, run `poetry run black package_sampling tests`,
+`poetry run isort ...`, `poetry run flake8 ...`, and `poetry run mypy package_sampling`
+to keep formatting and typing consistent.  The `Makefile` exposes convenience
+targets (`make format`, `make lint`, `make test`, etc.) if you prefer.
+
+**Steps to contribute**
 
 1. Fork the repository.
 2. Clone your fork to your local machine.
@@ -63,3 +101,16 @@ Steps to Contribute:
 4. Make your changes and commit them with clear messages.
 5. Push your changes to your fork.
 6. Open a pull request describing your changes.
+
+## Acknowledgments
+
+- Inspired by the R package **sampling** (Tillé et al.).
+- Thanks to everyone who opened issues, contributed code, or verified the
+  statistical behavior against external benchmarks.
+
+## License
+
+Licensed under the GNU General Public License v3.0 (or any later version).
+See [`LICENSE`](LICENSE) for the full text.  Because the project ports
+algorithms from the R **sampling** package (GPL ≥ 2), keeping this project
+GPL-compatible ensures downstream users remain compliant.

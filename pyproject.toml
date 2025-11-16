@@ -7,7 +7,7 @@ authors = [
   "Bardia Panahbehagh <Panahbehagh@khu.ac.ir>"
 ]
 readme = "README.md"
-license = "MIT"
+license = "GPL-3.0-or-later"
 homepage = "https://github.com/smrrazavian/package-sampling"
 repository = "https://github.com/smrrazavian/package-sampling"
 
