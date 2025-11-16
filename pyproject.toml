@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "package-sampling"
-version = "0.3.0"
+version = "1.0.0"
 description = "Python implementation of probability-based sampling algorithms inspired by the R package Sampling."
 authors = [
   "Mohammadreza Razavian <smrrazavian@outlook.com>",
