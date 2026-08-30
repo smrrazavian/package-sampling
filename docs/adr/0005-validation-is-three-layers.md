@@ -16,12 +16,24 @@ immediately.
 entry by entry needs `B ≫ N²` replicates to have any power, so this runs at
 N=20–40 with very large B, where it is unforgiving.
 
-**Sen–Yates–Grundy functional**, high N and n. At N=400 the π₂ matrix has 160k
-cells and cell-wise comparison is statistically hopeless. Sen–Yates–Grundy
-collapses the whole matrix into one scalar variance for a given `y`, which Monte
-Carlo estimates precisely with modest B. Checked for a spanning set of `y` —
-proportional to π, orthogonal to π, random, adversarial — alongside
-Horvitz–Thompson unbiasedness.
+**Sen–Yates–Grundy functional**, high N and n, **fixed-size designs only**. At
+N=400 the π₂ matrix has 160k cells and cell-wise comparison is statistically
+hopeless. Sen–Yates–Grundy collapses the whole matrix into one scalar variance
+for a given `y`, which Monte Carlo estimates precisely with modest B. Checked
+for a spanning set of `y` — proportional to π, orthogonal to π, random,
+adversarial — alongside Horvitz–Thompson unbiasedness.
+
+The fixed-size restriction is not a detail. Sen–Yates–Grundy is derived by using
+`Σ_k S_k = n` as a constant, so it is simply invalid for a random-size design,
+and it fails *silently*: for Poisson every off-diagonal `Δ_kl` is zero, so the
+formula returns **0.00** where the true variance is 1622. A plausible number
+that is completely wrong is the worst failure mode a test battery can have.
+
+Each design therefore declares `fixed_size`, and `var_syg` raises on a
+random-size design rather than returning zero. Two variance forms cover
+everything: the double sum `ΣΣ Δ_kl y_k y_l / (π_k π_l)` is valid for **any**
+design, and Poisson has the closed form `Σ (1 − π_k) y_k² / π_k`, which needs no
+π₂ at all.
 
 ## Consequences
 
