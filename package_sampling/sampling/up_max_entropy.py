@@ -91,15 +91,15 @@ class UPMaxEntropy:
         # raw total: units below eps contribute a sliver that is excluded from
         # the design anyway, and letting it reach as_int would reject a design
         # that is perfectly well defined (ADR-0007).
-        self.n = self._n_certain + as_int(pik[self.live].sum())
+        self._n_live = as_int(pik[self.live].sum())
+        self.n = self._n_certain + self._n_live
 
         self.q: NDArray[np.floating] | None = None
-        n_live = self.n - self._n_certain
-        if self.n >= 2 and n_live > 0:
+        if self.n >= 2 and self._n_live > 0:
             pik_tilde = upme_pik_tilde_from_pik(pik[self.live], eps=eps)
             with np.errstate(divide="ignore"):
                 w = pik_tilde / (1.0 - pik_tilde)
-            self.q = upme_q_from_w(w, n_live)
+            self.q = upme_q_from_w(w, self._n_live)
 
     def draw(self, rng: np.random.Generator | None = None) -> NDArray[np.int8]:
         """Draw a 0/1 membership mask with exactly :attr:`n` selected units."""
@@ -117,7 +117,14 @@ class UPMaxEntropy:
         return sel
 
     def pi2(self) -> NDArray[np.floating]:
-        """Joint inclusion probabilities (port of ``UPmaxentropypi2``)."""
+        """
+        Joint inclusion probabilities (port of ``UPmaxentropypi2``).
+
+        Accurate to roughly ``1e-8``, not to machine precision: the matrix is
+        built from the pi-tilde fixed point, which stops at ``eps``.  The
+        row-sum identity ``sum_l pi_kl = n * pi_k`` therefore holds only to
+        that tolerance, where UPTille and UPSystematic satisfy it to an ulp.
+        """
         return up_max_entropy_pi2(self.pik, eps=self.eps)
 
 

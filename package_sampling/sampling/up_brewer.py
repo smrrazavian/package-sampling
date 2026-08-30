@@ -42,7 +42,8 @@ class UPBrewer:
     pik : ndarray of float
         The target probabilities, coerced to float.
     n : int
-        Sample size over the live units.
+        Realised sample size: every draw selects exactly this many units,
+        certain units included.
     live : ndarray of bool
         Which units are decided at random.
 
@@ -75,17 +76,19 @@ class UPBrewer:
                 "(eps, 1 - eps)."
             )
 
-        self.n = as_int(self._pik_live.sum())
-
         self._base = np.zeros_like(pik, dtype=np.int8)
         self._base[pik >= 1 - eps] = 1
+        self._n_certain = int(self._base.sum())
+
+        self._n_live = as_int(self._pik_live.sum())
+        self.n = self._n_certain + self._n_live
 
     def draw(self, rng: np.random.Generator | None = None) -> NDArray[np.int8]:
         """Draw a 0/1 membership mask with exactly :attr:`n` live selections."""
         rng = rng or np.random.default_rng()
         pik_live = self._pik_live
         eps = self.eps
-        n = self.n
+        n = self._n_live
 
         sb = np.zeros(pik_live.size, dtype=np.int8)
         for i in range(1, n + 1):

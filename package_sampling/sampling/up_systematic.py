@@ -16,7 +16,7 @@ from typing import List, Union
 
 import numpy as np
 
-from package_sampling.utils import check_pik
+from package_sampling.utils import as_int, check_pik
 
 from .up_systematic_pi2 import up_systematic_pi2
 
@@ -33,6 +33,12 @@ class UPSystematic:
         Inclusion probabilities in ``[0, 1]``.
     eps : float, default ``1e-6``
         Threshold separating deterministic units from live ones.
+
+    Attributes
+    ----------
+    n : int
+        Realised sample size: every draw selects exactly this many units,
+        certain units included.
 
     Raises
     ------
@@ -58,6 +64,12 @@ class UPSystematic:
         self.eps = eps
         self.live = (pik > eps) & (pik < 1 - eps)
         self._certain = pik >= 1 - eps
+
+        # Systematic is fixed-size only when sum(pik_live) is a whole number:
+        # at 24.6 the realised size oscillates between 24 and 25, so
+        # fixed_size would be a false claim. as_int enforces it (ADR-0007).
+        self._n_live = as_int(pik[self.live].sum())
+        self.n = int(self._certain.sum()) + self._n_live
 
     def draw(self, rng: np.random.Generator | None = None) -> np.ndarray:
         """Draw a 0/1 membership mask."""

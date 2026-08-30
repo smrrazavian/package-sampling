@@ -43,7 +43,8 @@ class UPTille:
     pik : ndarray of float
         The target probabilities, coerced to float.
     n : int
-        Sample size over the live units.
+        Realised sample size: every draw selects exactly this many units,
+        certain units included.
     live : ndarray of bool
         Which units are decided at random.
     v : list of ndarray
@@ -77,19 +78,21 @@ class UPTille:
         if self._n_live_units == 0:
             raise ValueError("All inclusion probs are outside ]eps,1-eps[ .")
 
-        self.n = as_int(pik_live.sum())
-
         self._base = np.zeros_like(pik, dtype=np.int8)
         self._base[pik >= 1 - eps] = 1
+        self._n_certain = int(self._base.sum())
+
+        self._n_live = as_int(pik_live.sum())
+        self.n = self._n_certain + self._n_live
 
         # Elimination probabilities, one vector per removal step. Depends on
         # pik only, so it is built here rather than inside every draw.
         # n == N_live is impossible once as_int rejects non-integer sums
         # (ADR-0007), so there is no census case to skip.
         self.v: list[NDArray[np.floating]] = []
-        if 0 < self.n < self._n_live_units:
+        if 0 < self._n_live < self._n_live_units:
             prev_b = np.ones(self._n_live_units, dtype=float)
-            for k in range(self._n_live_units - self.n):
+            for k in range(self._n_live_units - self._n_live):
                 a = inclusion_probabilities(pik_live, self._n_live_units - k - 1)
                 self.v.append(1.0 - a / prev_b)
                 prev_b = a
@@ -97,7 +100,7 @@ class UPTille:
     def draw(self, rng: np.random.Generator | None = None) -> NDArray[np.int8]:
         """Draw a 0/1 membership mask with exactly :attr:`n` live selections."""
         out = self._base.copy()
-        if self.n == 0:
+        if self._n_live == 0:
             return out
 
         rng = rng or np.random.default_rng()
