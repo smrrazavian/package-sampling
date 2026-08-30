@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from package_sampling.sampling import upme_pik_tilde_from_pik
 
@@ -68,18 +69,20 @@ def test_upmepiktildefrompik_empty_input():
 def test_upmepiktildefrompik_values_outside_range():
     """Tests how the function handles values outside the [0,1] range."""
     pik = np.array([-0.1, 0.5, 1.2])
-    # Ensure it does not crash; the behaviour for out-of-range values is
-    # implementation-specific so we only check shape.
-    result = upme_pik_tilde_from_pik(pik)
-    assert result.shape == pik.shape
+    # Clipping to [0, 1] leaves [0, 0.5, 1.0], which sums to 1.5 -- not a
+    # valid fixed sample size, so it is rejected rather than rounded
+    # (ADR-0007).
+    with pytest.raises(ValueError, match="not an integer"):
+        upme_pik_tilde_from_pik(pik)
 
 
 def test_upmepiktildefrompik_single_value():
     """Tests function behavior with a single value."""
+    # A fixed-size design over one unit with expected size 0.5 is ill-posed.
     pik = np.array([0.5])
-    result = upme_pik_tilde_from_pik(pik)
-    assert result.shape == (1,)
-    assert 0 <= result[0] <= 1
+
+    with pytest.raises(ValueError, match="not an integer"):
+        upme_pik_tilde_from_pik(pik)
 
 
 def test_upmepiktildefrompik_sum_equals_integer():

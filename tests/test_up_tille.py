@@ -51,18 +51,41 @@ def test_tille_all_outside_range(pik):
         up_tille(pik)
 
 
-def test_tille_n_equals_zero():
-    pik = np.array([1e-5, 2e-5, 3e-5])  # sum ≈ 0 → n == 0
-    out = up_tille(pik)
-    assert np.all(out == 0)
+def test_tille_rejects_a_near_zero_non_integer_sum():
+    """sum(pik_live) = 6e-05 is not a valid fixed-size sample size.
+
+    This used to assert an all-zero sample.  R disagrees: it loops
+    ``1:(3 - 6e-05)`` = ``c(1, 2)``, removes two units and returns a sample of
+    size 1.  Rather than pick between an artifact and an accident we reject
+    the input (ADR-0007).
+    """
+    pik = np.array([1e-5, 2e-5, 3e-5])
+
+    with pytest.raises(ValueError, match="not an integer"):
+        up_tille(pik)
 
 
-def test_tille_n_equals_N():
-    # All live units must be selected when n == N
-    pik = np.array([0.6, 0.7, 0.8])
-    pik *= 3 / pik.sum()  # force n == N
-    out = up_tille(pik)
-    assert np.all(out == 1)
+def test_tille_n_equals_zero_selects_nobody():
+    """n == 0 needs a live unit whose sum still rounds to zero.
+
+    as_int's tolerance is tau = sqrt(machine eps) = 1.49e-08, and "live" means
+    pi > eps, so the branch is reachable only when the caller sets eps below
+    tau.  At the default eps = 1e-6 > tau it cannot be reached at all.
+    """
+    pik = np.array([1e-9])
+
+    out = up_tille(pik, eps=1e-12, rng=np.random.default_rng(0))
+
+    assert out.sum() == 0
+    assert out.dtype == np.int8 and out.shape == pik.shape
+
+
+def test_pi2_n_equals_zero_is_the_diagonal():
+    pik = np.array([1e-9])
+
+    pi2 = up_tille_pi2(pik, eps=1e-12)
+
+    np.testing.assert_allclose(np.diag(pi2), pik, atol=1e-15)
 
 
 def test_tille_zero_total_branch(monkeypatch):
@@ -110,13 +133,6 @@ def test_pi2_coerces_list():
 def test_pi2_all_outside_range(pik):
     with pytest.raises(ValueError, match="outside"):
         up_tille_pi2(pik)
-
-
-def test_pi2_full_census():
-    pik = np.array([0.5, 0.7, 0.9])
-    pik *= 3 / pik.sum()  # n == N
-    pi2 = up_tille_pi2(pik)
-    assert np.all(pi2 == 1.0)
 
 
 def test_pi2_off_diagonal_consistency():

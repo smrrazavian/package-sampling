@@ -8,9 +8,11 @@ This includes:
 """
 
 from .as_int import as_int  # noqa: F401
+from .check_pik import check_pik  # noqa: F401
 from .inclusion_probabilities import inclusion_probabilities  # noqa: F401
 
 __all__ = [
     "as_int",
+    "check_pik",
     "inclusion_probabilities",
 ]

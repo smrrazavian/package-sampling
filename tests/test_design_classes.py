@@ -145,3 +145,28 @@ def test_designs_declare_whether_they_are_fixed_size(cls, expected):
     pik = np.array([0.2, 0.3, 0.5, 0.4, 0.6])
 
     assert cls(pik).fixed_size is expected
+
+
+@pytest.mark.parametrize("cls", [UPBrewer, UPTille, UPMaxEntropy])
+def test_fixed_size_designs_reject_non_integer_pik_sum(cls):
+    """A fixed-size design of size 2.5 is ill-posed (ADR-0007)."""
+    pik = np.array([0.2, 0.35, 0.5, 0.65, 0.8])  # sums to 2.5
+
+    with pytest.raises(ValueError, match="not an integer"):
+        cls(pik)
+
+
+@pytest.mark.parametrize(
+    "cls", [UPBrewer, UPTille, UPSystematic, UPMaxEntropy, UPPoisson]
+)
+def test_designs_reject_pik_outside_the_unit_interval(cls):
+    """pi > 1 is not a probability; accepting it biases HT (ADR-0008)."""
+    pik = np.array([0.6, 0.7, 0.8]) * 3 / 2.1  # -> [0.857, 1.0, 1.143]
+
+    with pytest.raises(ValueError, match=r"\[0, 1\]"):
+        cls(pik)
+
+
+def test_pik_range_error_names_the_repair():
+    with pytest.raises(ValueError, match="inclusion_probabilities"):
+        UPTille(np.array([0.5, 1.4]))

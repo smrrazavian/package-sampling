@@ -14,7 +14,11 @@ from typing import List, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from package_sampling.utils import as_int, inclusion_probabilities
+from package_sampling.utils import (
+    as_int,
+    check_pik,
+    inclusion_probabilities,
+)
 
 
 def up_tille_pi2(
@@ -24,6 +28,8 @@ def up_tille_pi2(
     if not isinstance(pik, np.ndarray):
         pik = np.asarray(pik, dtype=float)
 
+    check_pik(pik, nan_message="`pik` contains NaN values.")
+
     live = (pik > eps) & (pik < 1 - eps)
     pik_live = pik[live]
     N = pik_live.size
@@ -31,8 +37,9 @@ def up_tille_pi2(
         raise ValueError("All inclusion probs are outside ]eps,1-eps[ .")
 
     n = as_int(pik_live.sum())
-    if n == N:  # full census
-        return np.ones((pik.size, pik.size))
+    # No n == N census branch: a live unit has pi < 1-eps, so
+    # N - sum(pik_live) > N*eps >= 1e-6 and as_int rejects the input
+    # before n could equal N (ADR-0007).
 
     UN = np.ones(N)
     b_prev = np.ones(N)

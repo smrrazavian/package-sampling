@@ -16,6 +16,8 @@ from typing import List, Union
 
 import numpy as np
 
+from package_sampling.utils import check_pik
+
 from .up_systematic_pi2 import up_systematic_pi2
 
 
@@ -50,8 +52,7 @@ class UPSystematic:
         eps: float = 1e-6,
     ) -> None:
         pik = np.asarray(pik, dtype=float)
-        if np.any(np.isnan(pik)):
-            raise ValueError("There are missing values in the pik vector")
+        check_pik(pik, nan_message="There are missing values in the pik vector")
 
         self.pik = pik
         self.eps = eps

@@ -43,7 +43,7 @@ def up_max_entropy_pi2(
     if not isinstance(pik, np.ndarray):
         pik = np.asarray(pik, dtype=float)
 
-    n = as_int(round(pik.sum()))
+    n = as_int(pik.sum())
     N = pik.size
     M = np.zeros((N, N))
 

@@ -10,6 +10,8 @@ from typing import List, Union
 
 import numpy as np
 
+from package_sampling.utils import check_pik
+
 
 class UPPoisson:
     """
@@ -36,8 +38,9 @@ class UPPoisson:
 
     def __init__(self, pik: Union[List[float], np.ndarray]) -> None:
         pik = np.asarray(pik, dtype=float)
-        if np.any(np.isnan(pik)):
-            raise ValueError("There are missing values in the `pik` vector.")
+        check_pik(
+            pik, nan_message="There are missing values in the `pik` vector."
+        )
         self.pik = pik
 
     def draw(self, rng: np.random.Generator | None = None) -> np.ndarray:

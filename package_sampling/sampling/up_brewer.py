@@ -19,7 +19,7 @@ from typing import List, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from package_sampling.utils import as_int
+from package_sampling.utils import as_int, check_pik
 
 
 class UPBrewer:
@@ -63,8 +63,7 @@ class UPBrewer:
         eps: float = 1e-6,
     ) -> None:
         pik = np.asarray(pik, dtype=float)
-        if np.any(np.isnan(pik)):
-            raise ValueError("Missing values detected in the pik vector.")
+        check_pik(pik, nan_message="Missing values detected in the pik vector.")
 
         self.pik = pik
         self.eps = eps
@@ -76,7 +75,7 @@ class UPBrewer:
                 "(eps, 1 - eps)."
             )
 
-        self.n = as_int(np.round(self._pik_live.sum()))
+        self.n = as_int(self._pik_live.sum())
 
         self._base = np.zeros_like(pik, dtype=np.int8)
         self._base[pik >= 1 - eps] = 1

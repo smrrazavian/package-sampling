@@ -19,7 +19,7 @@ from typing import List, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from package_sampling.utils import as_int, inclusion_probabilities
+from package_sampling.utils import as_int, check_pik, inclusion_probabilities
 
 from .up_tille_pi2 import up_tille_pi2
 
@@ -67,8 +67,7 @@ class UPTille:
         eps: float = 1e-6,
     ) -> None:
         pik = np.asarray(pik, dtype=float)
-        if np.any(np.isnan(pik)):
-            raise ValueError("`pik` contains NaN values.")
+        check_pik(pik, nan_message="`pik` contains NaN values.")
 
         self.pik = pik
         self.eps = eps
@@ -85,6 +84,8 @@ class UPTille:
 
         # Elimination probabilities, one vector per removal step. Depends on
         # pik only, so it is built here rather than inside every draw.
+        # n == N_live is impossible once as_int rejects non-integer sums
+        # (ADR-0007), so there is no census case to skip.
         self.v: list[NDArray[np.floating]] = []
         if 0 < self.n < self._n_live_units:
             prev_b = np.ones(self._n_live_units, dtype=float)
@@ -97,9 +98,6 @@ class UPTille:
         """Draw a 0/1 membership mask with exactly :attr:`n` live selections."""
         out = self._base.copy()
         if self.n == 0:
-            return out
-        if self.n == self._n_live_units:
-            out[self.live] = 1
             return out
 
         rng = rng or np.random.default_rng()

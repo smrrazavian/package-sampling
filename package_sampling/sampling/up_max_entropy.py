@@ -21,7 +21,7 @@ from typing import List, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from package_sampling.utils import as_int
+from package_sampling.utils import as_int, check_pik
 
 from .up_max_entropy_pi2 import up_max_entropy_pi2
 from .upme_pik_tilde_from_pik import upme_pik_tilde_from_pik
@@ -75,17 +75,23 @@ class UPMaxEntropy:
         pik = np.asarray(pik, dtype=float)
         if pik.ndim != 1:
             raise ValueError("pik must be a 1-D vector")
-        if np.any((pik < 0) | (pik > 1) | np.isnan(pik)):
-            raise ValueError("Inclusion probabilities must be between 0 and 1.")
+        check_pik(
+            pik, nan_message="Inclusion probabilities must be between 0 and 1."
+        )
 
         self.pik = pik
         self.eps = eps
-        self.n = as_int(round(pik.sum())) if pik.size else 0
         self.live = (pik > eps) & (pik < 1 - eps)
 
         self._base = np.zeros_like(pik, dtype=np.int8)
         self._base[pik >= 1 - eps] = 1
         self._n_certain = int(self._base.sum())
+
+        # n comes from the LIVE units plus the certain ones, never from the
+        # raw total: units below eps contribute a sliver that is excluded from
+        # the design anyway, and letting it reach as_int would reject a design
+        # that is perfectly well defined (ADR-0007).
+        self.n = self._n_certain + as_int(pik[self.live].sum())
 
         self.q: NDArray[np.floating] | None = None
         n_live = self.n - self._n_certain
