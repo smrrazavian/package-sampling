@@ -1,0 +1,20 @@
+name: goldens
+
+# Regenerates the R parity corpus (ADR-0006). Manual: the corpus is checked in
+# deliberately, so it changes only when someone means it to.
+on:
+  workflow_dispatch:
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the R image
+        run: docker build -t r-parity tools/
+      - name: Regenerate the corpus
+        run: |
+          docker run --rm -v "$PWD/tools":/w r-parity \
+            Rscript /w/generate_goldens.R > tests/golden/sampling_2.10.txt
+      - name: Fail if the corpus moved
+        run: git diff --exit-code tests/golden/
