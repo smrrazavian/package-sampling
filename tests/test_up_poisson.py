@@ -62,9 +62,9 @@ def test_poisson_expected_sample_size():
     num_simulations = 1000
     sample_sizes = []
 
+    rng = np.random.default_rng(20260830)
     for i in range(num_simulations):
-        np.random.seed(i)
-        result = up_poisson(pik)
+        result = up_poisson(pik, rng=rng)
         sample_sizes.append(np.sum(result))
 
     mean_sample_size = np.mean(sample_sizes)
@@ -80,9 +80,9 @@ def test_poisson_inclusion_probabilities():
     num_simulations = 5000
 
     results = np.zeros((num_simulations, len(pik)))
+    rng = np.random.default_rng(20260830)
     for i in range(num_simulations):
-        np.random.seed(i)
-        results[i] = up_poisson(pik)
+        results[i] = up_poisson(pik, rng=rng)
 
     actual_probs = results.mean(axis=0)
     std_error = np.sqrt(pik * (1 - pik) / num_simulations)
@@ -107,9 +107,9 @@ def test_poisson_independence():
     num_simulations = 5000
 
     results = np.zeros((num_simulations, len(pik)))
+    rng = np.random.default_rng(20260830)
     for i in range(num_simulations):
-        np.random.seed(i)
-        results[i] = up_poisson(pik)
+        results[i] = up_poisson(pik, rng=rng)
 
     # Calculate joint selection probabilities
     joint_probs = np.zeros((len(pik), len(pik)))
@@ -152,9 +152,9 @@ def test_poisson_variance():
     num_simulations = 10000
     sample_sizes = []
 
+    rng = np.random.default_rng(20260830)
     for i in range(num_simulations):
-        np.random.seed(i)
-        result = up_poisson(pik)
+        result = up_poisson(pik, rng=rng)
         sample_sizes.append(np.sum(result))
 
     observed_variance = np.var(sample_sizes)
@@ -180,9 +180,9 @@ def test_poisson_with_various_distributions(pik):
     num_simulations = 1000
 
     sample_sizes = []
+    rng = np.random.default_rng(20260830)
     for i in range(num_simulations):
-        np.random.seed(i)
-        result = up_poisson(pik)
+        result = up_poisson(pik, rng=rng)
         sample_sizes.append(np.sum(result))
 
     mean_sample_size = np.mean(sample_sizes)
@@ -201,9 +201,9 @@ def test_intensive_poisson_properties():
 
     # Run many simulations
     results = np.zeros((num_simulations, len(pik)))
+    rng = np.random.default_rng(20260830)
     for i in range(num_simulations):
-        np.random.seed(i)
-        result = up_poisson(pik)
+        result = up_poisson(pik, rng=rng)
         results[i] = result
 
     # Calculate actual inclusion probabilities
@@ -238,26 +238,33 @@ def test_intensive_poisson_properties():
     print(f"Actual variance: {var_sample_size}")
     print(f"Joint probability matrix:\n{joint_probs}")
 
-    # Check mean sample size
-    assert np.isclose(
-        mean_sample_size, expected_size, rtol=0.05
-    ), f"Expected mean sample size {expected_size}, got {mean_sample_size}"
+    # Tolerances are multiples of the Monte-Carlo standard error, not a
+    # relative tolerance: rtol=0.1 on a joint probability of 0.02 at B=10000
+    # is only 1.4 sigma, which fails for roughly a quarter of seeds.
+    k = 4.0
 
-    # Check variance
+    se_size = np.sqrt(expected_var / num_simulations)
+    assert abs(mean_sample_size - expected_size) <= k * se_size, (
+        f"mean sample size {mean_sample_size} outside {k} SE of {expected_size}"
+    )
+
     assert np.isclose(
         var_sample_size, expected_var, rtol=0.1
     ), f"Expected variance {expected_var}, got {var_sample_size}"
 
-    # Check inclusion probabilities
-    assert np.all(
-        np.isclose(actual_probs, pik, rtol=0.1)
-    ), "Inclusion probabilities don't match expected"
+    se_probs = np.sqrt(pik * (1 - pik) / num_simulations)
+    assert np.all(np.abs(actual_probs - pik) <= k * se_probs), (
+        f"inclusion probabilities outside {k} SE: {actual_probs} vs {pik}"
+    )
 
-    # Check independence
+    # Independence: joint probability equals the product of the marginals.
     for i in range(len(pik)):
         for j in range(i + 1, len(pik)):
             expected_joint = pik[i] * pik[j]
-            actual_joint = joint_probs[i, j]
-            assert np.isclose(
-                actual_joint, expected_joint, rtol=0.1
-            ), f"Joint probability for units {i},{j} doesn't match expected"
+            se_joint = np.sqrt(
+                expected_joint * (1 - expected_joint) / num_simulations
+            )
+            assert abs(joint_probs[i, j] - expected_joint) <= k * se_joint, (
+                f"joint probability for units {i},{j} outside {k} SE: "
+                f"{joint_probs[i, j]} vs {expected_joint}"
+            )

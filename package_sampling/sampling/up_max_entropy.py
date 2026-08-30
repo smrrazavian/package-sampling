@@ -1,29 +1,17 @@
 """
-Maximum-Entropy sampling design  (R `UPmaxentropy` → Python).
+Maximum-entropy sampling design (port of R's ``UPmaxentropy``).
 
-The design draws a *fixed-size* sample that
+Draws a fixed-size sample that matches the target inclusion probabilities and
+maximises Shannon entropy subject to that constraint, via the sequential
+machinery π̃ → w → q → s (Tillé & Matei, 2016, ch. 11).
 
-  • matches the required first-order inclusion probabilities ``pik``;
-  • maximises Shannon entropy subject to that constraint.
+Building the design from ``pik`` is expensive and drawing from it is not: at
+N=2000 the π̃ fixed point and the q matrix cost ~1.9 s between them while a draw
+costs ~2 ms.  Both are functions of ``pik`` alone, so they are computed once in
+:class:`UPMaxEntropy` and reused across draws (ADR-0002).
 
-Internally it uses the sequential Max-Entropy machinery
-
-        π̃  →  w  →  q  →  s₂
-
-where
-    wᵢ   = π̃ᵢ / (1 − π̃ᵢ) ,
-    q    = upme_q_from_w(w, n) and
-    s₂   = upme_s_from_q(q)
-
-(see Tillé & Matei, 2016, Chap. 11).
-
-Deterministic units
--------------------
-• πᵢ ≥ 1 − *eps* → always selected
-• πᵢ ≤ *eps*   → never selected
-
-Only the “live’’ units (eps < πᵢ < 1−eps) drive the Max-Entropy loop.
-
+Deterministic units: π ≥ 1−eps is always selected, π ≤ eps never is.  Only the
+live units drive the entropy loop.
 """
 
 from __future__ import annotations
@@ -35,9 +23,96 @@ from numpy.typing import NDArray
 
 from package_sampling.utils import as_int
 
+from .up_max_entropy_pi2 import up_max_entropy_pi2
 from .upme_pik_tilde_from_pik import upme_pik_tilde_from_pik
 from .upme_q_from_w import upme_q_from_w
 from .upme_s_from_q import upme_s_from_q
+
+
+class UPMaxEntropy:
+    """
+    Maximum-entropy unequal-probability sampling design, fixed size.
+
+    Built once from ``pik`` — including the π̃ fixed point and the q matrix —
+    then drawn from as often as needed.
+
+    Parameters
+    ----------
+    pik : 1-D array-like of float
+        Target inclusion probabilities in ``[0, 1]``.
+    eps : float, default ``1e-6``
+        Threshold separating deterministic units from live ones.
+
+    Attributes
+    ----------
+    pik : ndarray of float
+        The target probabilities, coerced to float.
+    n : int
+        Sample size, ``round(sum(pik))``.  Every draw has exactly this many
+        selected units.
+    live : ndarray of bool
+        Which units are decided at random.
+    q : ndarray of float or None
+        The sequential conditional-probability matrix, or *None* when the
+        design is degenerate enough not to need one (n ≤ 1, or every unit
+        already deterministic).
+
+    Raises
+    ------
+    ValueError
+        If ``pik`` is not 1-D, or contains NaN or values outside ``[0, 1]``.
+    """
+
+    #: Whether every draw has the same sample size.
+    #: Max-entropy draws exactly ``n`` units, so Sen-Yates-Grundy applies.
+    fixed_size = True
+
+    def __init__(
+        self,
+        pik: Union[List[float], NDArray[np.floating]],
+        eps: float = 1e-6,
+    ) -> None:
+        pik = np.asarray(pik, dtype=float)
+        if pik.ndim != 1:
+            raise ValueError("pik must be a 1-D vector")
+        if np.any((pik < 0) | (pik > 1) | np.isnan(pik)):
+            raise ValueError("Inclusion probabilities must be between 0 and 1.")
+
+        self.pik = pik
+        self.eps = eps
+        self.n = as_int(round(pik.sum())) if pik.size else 0
+        self.live = (pik > eps) & (pik < 1 - eps)
+
+        self._base = np.zeros_like(pik, dtype=np.int8)
+        self._base[pik >= 1 - eps] = 1
+        self._n_certain = int(self._base.sum())
+
+        self.q: NDArray[np.floating] | None = None
+        n_live = self.n - self._n_certain
+        if self.n >= 2 and n_live > 0:
+            pik_tilde = upme_pik_tilde_from_pik(pik[self.live], eps=eps)
+            with np.errstate(divide="ignore"):
+                w = pik_tilde / (1.0 - pik_tilde)
+            self.q = upme_q_from_w(w, n_live)
+
+    def draw(self, rng: np.random.Generator | None = None) -> NDArray[np.int8]:
+        """Draw a 0/1 membership mask with exactly :attr:`n` selected units."""
+        sel = self._base.copy()
+        if self.n == 0 or self.n == self._n_certain:
+            return sel
+
+        rng = rng or np.random.default_rng()
+
+        if self.n == 1:
+            sel[rng.choice(self.pik.size, p=self.pik / self.pik.sum())] = 1
+            return sel
+
+        sel[self.live] = upme_s_from_q(self.q, rng=rng).astype(np.int8)
+        return sel
+
+    def pi2(self) -> NDArray[np.floating]:
+        """Joint inclusion probabilities (port of ``UPmaxentropypi2``)."""
+        return up_max_entropy_pi2(self.pik, eps=self.eps)
 
 
 def up_max_entropy(
@@ -46,71 +121,23 @@ def up_max_entropy(
     rng: np.random.Generator | None = None,
 ) -> NDArray[np.int8]:
     """
-    Maximum-Entropy unequal-probability sampling without replacement.
+    Draw a single max-entropy sample (one-shot form of :class:`UPMaxEntropy`).
+
+    Rebuilds the design on every call.  To draw repeatedly from the same
+    ``pik``, construct :class:`UPMaxEntropy` once instead.
 
     Parameters
     ----------
     pik : 1-D array-like of float
-        Target inclusion probabilities (0 ≤ πᵢ ≤ 1).
-    eps : float, default 1e-6
-        Tolerance that separates deterministic 0/1 units from “live’’ ones.
-    rng : numpy.random.Generator | None
-        Random source.  A fresh ``default_rng()`` is created if *None*.
+        Target inclusion probabilities in ``[0, 1]``.
+    eps : float, default ``1e-6``
+        Threshold separating deterministic units from live ones.
+    rng : numpy.random.Generator or None
+        Random source; a fresh ``default_rng()`` is used if *None*.
 
     Returns
     -------
-    sel : ndarray[int8]
-        0/1 selection mask with ``dtype == np.int8`` and
-        ``sel.sum() == round(sum(pik))``.
+    ndarray of int8
+        0/1 mask with ``sum() == round(sum(pik))``.
     """
-    # ------------- input coercion & sanity checks -------------------------
-    if not isinstance(pik, np.ndarray):
-        pik = np.asarray(pik, dtype=float)
-    if pik.ndim != 1:
-        raise ValueError("pik must be a 1-D vector")
-    if np.any((pik < 0) | (pik > 1) | np.isnan(pik)):
-        raise ValueError("Inclusion probabilities must be between 0 and 1.")
-    if pik.size == 0:
-        return np.zeros(0, dtype=np.int8)
-
-    rng = rng or np.random.default_rng()
-    n_tot = as_int(round(pik.sum()))
-
-    # ------------- deterministic selections ------------------------------
-    sel = np.zeros_like(pik, dtype=np.int8)
-    sel[pik >= 1 - eps] = 1
-    if n_tot == 0:
-        return sel
-    if n_tot == sel.sum():
-        return sel
-
-    # ---------------------------------------------------------------------
-    # CASE 1 : n_tot == 1  → simple multinomial draw
-    # ---------------------------------------------------------------------
-    if n_tot == 1:
-        probs = pik / pik.sum()
-        idx = rng.choice(pik.size, p=probs)
-        sel[idx] = 1
-        return sel
-
-    # ---------------------------------------------------------------------
-    # CASE 2 : n_tot ≥ 2  → sequential Max-Entropy algorithm
-    # ---------------------------------------------------------------------
-    live_mask = (pik > eps) & (pik < 1 - eps)
-    pik_live = pik[live_mask]
-    n_live = n_tot - sel.sum()
-
-    if n_live == 0:
-        return sel
-
-    # ------ fixed-point to obtain π̃ -------------------------------------
-    pik_tilde = upme_pik_tilde_from_pik(pik_live, eps=eps)
-
-    # ------ build q-matrix, draw sample ----------------------------------
-    with np.errstate(divide="ignore"):
-        w = pik_tilde / (1.0 - pik_tilde)
-    q = upme_q_from_w(w, n_live)
-    sel_live = upme_s_from_q(q, rng=rng)
-
-    sel[live_mask] = sel_live.astype(np.int8)
-    return sel
+    return UPMaxEntropy(pik, eps).draw(rng)

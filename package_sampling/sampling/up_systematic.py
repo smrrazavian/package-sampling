@@ -1,61 +1,103 @@
 """
-UPsystematic Sampling Method
+Systematic sampling with unequal probabilities.
 
-Implementation of the unequal-probability (UP) systematic design often
-used in survey sampling when units have heterogeneous inclusion
-probabilities.
+Port of R's ``UPsystematic`` / ``UPsystematicpi2`` (package *sampling* 2.10).
 
-Function:
-    up_systematic(pik: np.ndarray, eps: float = 1e-6) -> np.ndarray
-        Applies systematic sampling to inclusion probabilities and returns a
-        binary selection array.
+Units with π outside ``(eps, 1-eps)`` are deterministic: π ≥ 1−eps is always
+selected, π ≤ eps never is.  Only the live units drive the systematic sweep.
 
-The algorithm follows the probabilistic selection rules, handles NaNs,
-and treats probabilities extremely close to 0 or 1 as deterministic
-inclusions.
-
-Example usage:
-    >>> pik = np.array([0.2, 0.3, 0.5])
-    >>> up_systematic(pik)
-    array([0, 0, 1])
+Note the π₂ block uses R's own thresholds ``0 < π < 1`` rather than the eps
+window — that is parity with ``UPsystematicpi2``, not drift.
 """
+
+from __future__ import annotations
+
+from typing import List, Union
 
 import numpy as np
 
+from .up_systematic_pi2 import up_systematic_pi2
+
+
+class UPSystematic:
+    """
+    Systematic unequal-probability sampling design.
+
+    Built once from ``pik``, then drawn from as often as needed.
+
+    Parameters
+    ----------
+    pik : 1-D array-like of float
+        Inclusion probabilities in ``[0, 1]``.
+    eps : float, default ``1e-6``
+        Threshold separating deterministic units from live ones.
+
+    Raises
+    ------
+    ValueError
+        If ``pik`` contains NaN.
+    """
+
+    #: Whether every draw has the same sample size.
+    #: Systematic draws a fixed number of units, so Sen-Yates-Grundy applies
+    #: -- though it violates the Yates-Grundy condition, so estimates may
+    #: come out negative.
+    fixed_size = True
+
+    def __init__(
+        self,
+        pik: Union[List[float], np.ndarray],
+        eps: float = 1e-6,
+    ) -> None:
+        pik = np.asarray(pik, dtype=float)
+        if np.any(np.isnan(pik)):
+            raise ValueError("There are missing values in the pik vector")
+
+        self.pik = pik
+        self.eps = eps
+        self.live = (pik > eps) & (pik < 1 - eps)
+        self._certain = pik >= 1 - eps
+
+    def draw(self, rng: np.random.Generator | None = None) -> np.ndarray:
+        """Draw a 0/1 membership mask."""
+        s = np.zeros_like(self.pik, dtype=np.int8)
+        s[self._certain] = 1
+
+        pik1 = self.pik[self.live]
+        n_live = pik1.size
+        if n_live:
+            rng = rng or np.random.default_rng()
+            u = rng.random()
+            a = (np.concatenate(([0.0], np.cumsum(pik1))) - u) % 1
+            s[self.live] = (a[:n_live] > a[1:]).astype(np.int8)
+
+        return s
+
+    def pi2(self) -> np.ndarray:
+        """Joint inclusion probabilities (port of ``UPsystematicpi2``)."""
+        return up_systematic_pi2(self.pik)
+
 
 def up_systematic(
-    pik: np.ndarray,
+    pik: Union[List[float], np.ndarray],
     eps: float = 1e-6,
     rng: np.random.Generator | None = None,
 ) -> np.ndarray:
     """
-    Systematic sampling method (UPsystematic).
+    Draw a single systematic sample (one-shot form of :class:`UPSystematic`).
 
-    Args:
-        pik (np.ndarray): A 1D NumPy array of inclusion probabilities.
-        eps (float): Small value for stability in comparison (default: 1e-6).
+    Parameters
+    ----------
+    pik : 1-D array-like of float
+        Inclusion probabilities in ``[0, 1]``.
+    eps : float, default ``1e-6``
+        Threshold separating deterministic units from live ones.
+    rng : numpy.random.Generator or None
+        Random source; a fresh ``default_rng()`` is used if *None*.
 
-    Returns:
-        np.ndarray: A binary selection array of 0s and 1s.
+    Returns
+    -------
+    ndarray of int8
+        0/1 mask the same shape as ``pik``.
     """
-    if not isinstance(pik, np.ndarray):
-        pik = np.array(pik, dtype=float)
-
-    if np.any(np.isnan(pik)):
-        raise ValueError("There are missing values in the pik vector")
-
-    s = np.zeros_like(pik, dtype=np.int8)
-    s[pik >= 1 - eps] = 1
-
-    mask = (pik > eps) & (pik < 1 - eps)
-    pik1 = pik[mask]
-    N = len(pik1)
-
-    if N > 0:
-        rng = rng or np.random.default_rng()
-        u = rng.random()
-        a = (np.concatenate(([0], np.cumsum(pik1))) - u) % 1
-        s1 = (a[:N] > a[1:]).astype(np.int8)
-        s[mask] = s1
-
-    return s
+    return UPSystematic(pik, eps).draw(rng)
