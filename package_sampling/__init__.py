@@ -9,4 +9,4 @@ inspired by the R *sampling* package.  Subpackages:
 ``package_sampling.utils``    - supporting helpers
 """
 
-__all__ = ["sampling", "utils"]
+__all__ = ["estimators", "sampling", "utils"]
