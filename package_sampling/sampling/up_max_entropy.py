@@ -110,7 +110,7 @@ def up_max_entropy(
     with np.errstate(divide="ignore"):
         w = pik_tilde / (1.0 - pik_tilde)
     q = upme_q_from_w(w, n_live)
-    sel_live = upme_s_from_q(q)
+    sel_live = upme_s_from_q(q, rng=rng)
 
     sel[live_mask] = sel_live.astype(np.int8)
     return sel
